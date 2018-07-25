@@ -1,0 +1,306 @@
+<html>
+
+<head>
+<title>Learning WebGL &mdash; lesson 9</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript" src="GameObject.js"></script>
+<script type="text/javascript" src="ModelLoader.js"></script>
+<script type="text/javascript" src="TextureLoader.js"></script>
+<script type="text/javascript" src="HelperFunctions.js"></script>
+
+
+
+<script type="text/javascript">
+    var gl;
+      
+	var timePassed = 0;
+	let _gameObjects = [];
+  
+    var effectiveFPMS = 60 / 1000;
+	var anglePerSecond = 60;
+	var uniformsArray = {};
+	
+	
+  function initGL(canvas) {
+        try {
+            gl = canvas.getContext("experimental-webgl");
+            gl.viewportWidth = canvas.width;
+            gl.viewportHeight = canvas.height;
+        } catch (e) {
+        }
+        if (!gl) {
+            alert("Could not initialise WebGL, sorry :-(");
+        }
+    }
+	
+	
+	   function getShader(gl, id) {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript) {
+            return null;
+        }
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3) {
+                str += k.textContent;
+            }
+            k = k.nextSibling;
+        }
+        var shader;
+        if (shaderScript.type == "x-shader/x-fragment") {
+            shader = gl.createShader(gl.FRAGMENT_SHADER);
+        } else if (shaderScript.type == "x-shader/x-vertex") {
+            shader = gl.createShader(gl.VERTEX_SHADER);
+        } else {
+            return null;
+        }
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+        return shader;
+    }
+	
+
+    function drawScene(seconds) 
+	{
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+		gl.enable(gl.DEPTH_TEST);
+		//gl.disable(gl.CULL_FACE);
+		
+		
+		uniformsArray["Ambient"] = [parseFloat(document.getElementById("ambientR").value), parseFloat(document.getElementById("ambientG").value), parseFloat(document.getElementById("ambientB").value)];
+		uniformsArray["LightPos"] = [parseFloat(document.getElementById("lightPositionX").value), parseFloat(document.getElementById("lightPositionY").value), parseFloat(document.getElementById("lightPositionZ").value)];
+		uniformsArray["LightCol"] = [parseFloat(document.getElementById("pointR").value), parseFloat(document.getElementById("pointG").value), parseFloat(document.getElementById("pointB").value)];
+			
+		for(let i =0; i < _gameObjects.length; i++)
+		{			
+			if(_gameObjects[i].transform.Gparent == null)
+			{
+				mat4.identity(mvMatrix);
+				DrawGameObject(_gameObjects[i], mvMatrix, seconds);
+			}
+		}
+		
+		_gameObjects[0].sayHi();
+    }
+
+
+    function tick() {
+        requestAnimFrame(tick);
+		
+		let loadedCount = 0;
+		for(let i =0; i < _gameObjects.length; i++)
+		{
+			if(_gameObjects[i].mesh.loaded)
+			loadedCount ++;
+		}
+		if(loadedCount == _gameObjects.length)
+		{	
+			timePassed = (performance.now() / 1000.);
+			drawScene(timePassed);
+		}
+    }
+    function webGLStart() {
+        var canvas = document.getElementById("glenns-canvas");
+        initGL(canvas);
+	
+		CreateGameObjects();
+	
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        tick();
+    }
+	
+	
+	function CreateGameObjects()
+	{
+	  
+		_gameObjects.push( new Creation([0.0, 0.0, -6.0], [45, 0, 0], [1.0, 1.0, 1.0], "Models/glenn_monkey.obj", "crate.gif", 'shader-fs', 'shader-vs', ['vn']));
+		//_gameObjects[0].gameLogic.sayHi = function() {
+		//  console.log(this.age);
+		//}
+		
+		let jumboScale = 1./20.;
+		_gameObjects.push(new Creation([0.0, 1.0, 0.0], [0, 0, 0.0], [jumboScale,jumboScale,jumboScale], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']));
+		_gameObjects[1].SetParent(_gameObjects[0]);
+		
+		let jmmyScale = 1.;
+		_gameObjects.push(new Creation([0.0, 0.0, -44], [0, 0, 0.0], [jmmyScale,jmmyScale,jmmyScale], "Models/Lowpoly_tree_sample.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']));
+	
+	
+	}
+	
+
+	
+</script>
+
+
+
+
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec3 vTransformedNormal;
+	varying vec4 vPosition;
+    
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+	  
+	uniform sampler2D uSampler;
+    void main(void) 
+	{
+	    vec3 lightWeighting;
+
+		vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+
+		float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
+		lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
+		//lightWeighting *= sin(gTime);
+	
+		//lightWeighting.xyz = vec3(1.,1.,1.);
+        vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+		gl_FragColor = vec4(textureColor.rgb * lightWeighting, textureColor.a);
+    }
+</script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec2 aTextureCoord;
+	attribute vec3 aVertexNormal;
+
+	uniform mat4 uMVMatrix;
+	uniform mat4 uPMatrix;
+	uniform mat3 uNMatrix;
+
+	uniform float gTime;
+	
+	varying vec2 vTextureCoord;
+	varying vec3 vTransformedNormal;
+	varying vec4 vPosition;
+	
+    void main(void) 
+	{
+		vTransformedNormal = uNMatrix * aVertexNormal;
+
+		vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+		
+		
+		
+		//vPosition.y *= (1.0 + sin(gTime) * 0.7);
+		//vPosition.xyz += vTransformedNormal.xyz * sin(gTime) * 0.2;
+		
+		gl_Position = uPMatrix * vPosition;
+		vTextureCoord = aTextureCoord;
+    }
+</script>
+
+
+
+
+
+
+<script id="shader-fss" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec4 vPosition;
+    
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+	  
+	uniform sampler2D uSampler;
+    void main(void) 
+	{
+	   
+        vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+		gl_FragColor = textureColor;
+		gl_FragColor.rgb = vec3(1.,1.,1.);// vPosition.xyz;
+    }
+</script>
+
+
+
+<script id="shader-vss" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec2 aTextureCoord;
+
+	uniform mat4 uMVMatrix;
+	uniform mat4 uPMatrix;
+	uniform mat3 uNMatrix;
+
+	uniform float gTime;
+	
+	varying vec2 vTextureCoord;
+	varying vec4 vPosition;
+	
+    void main(void) 
+	{
+
+		vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+		
+		
+		//vPosition.y += sin(gTime) * 2.2;
+		
+		gl_Position = uPMatrix * vPosition;
+		vTextureCoord = aTextureCoord;
+    }
+</script>
+
+
+
+
+
+
+
+</head>
+
+
+<body onload="webGLStart();">
+    <a href="http://learningwebgl.com/blog/?p=1008">&lt;&lt; Back to Lesson 9</a><br />
+
+    <canvas id="glenns-canvas" style="border: none;" width="500" height="500"></canvas>
+	<br/>
+	
+	<table style="border: 0; padding: 10px;">
+        <tr>
+            <td><b>Location:</b>
+            <td>X: <input type="text" id="lightPositionX" value="-5.0" />
+            <td>Y: <input type="text" id="lightPositionY" value="0.0" />
+            <td>Z: <input type="text" id="lightPositionZ" value="0.0" />
+        </tr>
+        <tr>
+            <td><b>Colour:</b>
+            <td>R: <input type="text" id="pointR" value="0.8" />
+            <td>G: <input type="text" id="pointG" value="0.8" />
+            <td>B: <input type="text" id="pointB" value="0.8" />
+        </tr>
+    </table>
+
+    <h2>Ambient light:</h2>
+
+    <table style="border: 0; padding: 10px;">
+        <tr>
+            <td><b>Colour:</b>
+            <td>R: <input type="text" id="ambientR" value="0.2" />
+            <td>G: <input type="text" id="ambientG" value="0.2" />
+            <td>B: <input type="text" id="ambientB" value="0.2" />
+        </tr>
+    </table>
+    <br/>
+	
+
+    <a href="http://learningwebgl.com/blog/?p=1008">&lt;&lt; Back to Lesson 9</a>
+</body>
+
+</html>
