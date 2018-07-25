@@ -123,14 +123,14 @@
 	function CreateGameObjects()
 	{
 	  
-		_gameObjects.push( new Creation([0.0, 0.0, -6.0], [45, 0, 0], [1.0, 1.0, 1.0], "Models/glenn_monkey.obj", "crate.gif", 'shader-fs', 'shader-vs', ['vn']));
+		_gameObjects.push( new Creation([2.0, 0.0, -8.0], [45, 0, 0], [1.0, 1.0, 1.0], "Models/glenn_monkey.obj", "crate.gif", 'shader-fs', 'shader-vs', ['vn']));
 		//_gameObjects[0].gameLogic.sayHi = function() {
 		//  console.log(this.age);
 		//}
 		
 		let jumboScale = 1./20.;
-		_gameObjects.push(new Creation([0.0, 1.0, 0.0], [0, 0, 0.0], [jumboScale,jumboScale,jumboScale], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']));
-		_gameObjects[1].SetParent(_gameObjects[0]);
+		//_gameObjects.push(new Creation([0.0, 1.0, 0.0], [0, 0, 0.0], [jumboScale,jumboScale,jumboScale], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']));
+		//_gameObjects[1].SetParent(_gameObjects[0]);
 		
 		let jmmyScale = 1.;
 		_gameObjects.push(new Creation([0.0, 0.0, -44], [0, 0, 0.0], [jmmyScale,jmmyScale,jmmyScale], "Models/Lowpoly_tree_sample.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']));

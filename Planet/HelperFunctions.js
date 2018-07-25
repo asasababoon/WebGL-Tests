@@ -65,9 +65,15 @@ function DrawGameObject(gameObject, transform, seconds)
 	//mat4.rotate(transform, degToRad(gameObject.transform.rotation[0]), [1, 0, 0],);
 	//mat4.rotate(transform, degToRad(gameObject.transform.rotation[1]), [0, 1, 0]);
 	
-	mat4.rotateY(transform, degToRad(gameObject.transform.rotation[1]));
-	mat4.rotateX(transform, degToRad(gameObject.transform.rotation[0]));
-	mat4.rotateZ(transform, degToRad(gameObject.transform.rotation[2]));
+	
+	
+	//mat4.rotateX(transform, degToRad(gameObject.transform.rotation[0]));
+	//mat4.rotateZ(transform, degToRad(gameObject.transform.rotation[2]));
+	
+	
+	transform = lookAt(gameObject, transform, [1111.0, 4111.0, 1111.0]);
+	//mat4.rotateY(transform, degToRad(180));
+	//mat4.rotateY(transform, degToRad(gameObject.transform.rotation[1]));
 	
 	//var angle = anglePerSecond * seconds;
 	//mat4.rotate(transform, degToRad(angle), [0.0, -1.0, 0.0]);
@@ -79,6 +85,102 @@ function DrawGameObject(gameObject, transform, seconds)
 	{
 		DrawGameObject(gameObject.transform.Gchilds[i],  transform, seconds);
 	}
+}
+
+function lookAt(gameObject, transform, target)
+{
+	var fromPos = gameObject.transform.position;
+	//vec3.cross   
+	//var forward = vec3.normalize(fromPos - target);
+	//var forward = vec3.normalize(vec3.subtract(fromPos,target));
+	
+	var xDiff  = fromPos[0] - target[0];
+	
+	var direction = vec3.create();
+	direction[0] = fromPos[0] - target[0];
+	direction[1] = fromPos[1] - target[1];
+	direction[2] = fromPos[2] - target[2];
+	
+	//console.log(direction[0]);
+	//[xDiff, fromPos[1] - target[1], fromPos[2] - target[2]]);
+	var forward = vec3.normalize( direction);// [xDiff, fromPos[1] - target[1], fromPos[2] - target[2]]);
+	
+	
+	
+	var temp = vec3.create();
+	temp[0] = 0;
+	temp[1] = 1.0;
+	temp[2] = 0.0;
+	//console.log(forward[0]);
+	var right = vec3.create();
+	right = vec3.cross(temp, forward);
+	//console.log(direction[0]);
+	
+	var gghh= vec3.create();;
+	gghh[0] = forward[0];
+	gghh[1] = forward[1];
+	gghh[2] = forward[2];
+	
+	var up = vec3.create();
+	up = vec3.cross(gghh, right);
+	//console.log(forward[0]);
+	
+	//console.log(up[1]);
+	
+	var f = vec3.create();
+	f[0] = 1.0;
+	f[1] = 0.0;
+	f[2] = 0.0;
+	var bla = vec3.normalize( f );
+	
+	var rotationMatrix = mat4.create();
+	
+	
+	rotationMatrix[0] = right[0];
+	rotationMatrix[1] = right[1];
+	rotationMatrix[2] = right[2];
+	rotationMatrix[3] = 0;
+	
+	rotationMatrix[4] = up[0];
+	rotationMatrix[5] = up[1];
+	rotationMatrix[6] = up[2];
+	rotationMatrix[7] = 0;
+	
+	rotationMatrix[8] = forward[0];
+	rotationMatrix[9] = forward[1];
+	rotationMatrix[10] = forward[2];
+	rotationMatrix[11] =0;
+	
+	rotationMatrix[12] = 0;
+	rotationMatrix[13] = 0;
+	rotationMatrix[14] = 0;
+	rotationMatrix[15] = 1;
+	/*
+	
+	*/
+	
+	//var rotationMatrix = mat4.create();
+	//rotationMatrix[0] = 0;
+	//rotationMatrix[1] = 0;
+	//rotationMatrix[2] = 1;
+	//rotationMatrix[3] = 0;
+	
+	//rotationMatrix[4] = 0;
+	//rotationMatrix[5] = 1;
+	//rotationMatrix[6] = 0;
+	//rotationMatrix[7] = 0;
+	
+	//rotationMatrix[8] = 1;
+	//rotationMatrix[9] = 0;
+	//rotationMatrix[10] = 0;
+	//rotationMatrix[11] =0;
+	
+	rotationMatrix[12] = 0;
+	rotationMatrix[13] = 0;
+	rotationMatrix[14] = 0;
+	rotationMatrix[15] = 1;
+	return mat4.multiply(transform, rotationMatrix);
+	
 }
 
 
