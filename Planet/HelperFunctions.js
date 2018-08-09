@@ -57,8 +57,8 @@ function DrawGameObject(gameObject, transform, seconds)
 
 	
 	
-	mat4.translate(transform, gameObject.transform.position);	
-	mat4.scale(transform, gameObject.transform.scale);
+	//mat4.translate(transform, gameObject.transform.position);	
+	//mat4.scale(transform, gameObject.transform.scale);
 	
 	
 	
@@ -71,7 +71,12 @@ function DrawGameObject(gameObject, transform, seconds)
 	//mat4.rotateZ(transform, degToRad(gameObject.transform.rotation[2]));
 	
 	
-	transform = lookAt(gameObject, transform, [1111.0, 4111.0, 1111.0]);
+	
+	transform = Translate(gameObject, transform);
+	transform = lookAt(gameObject, transform, [4400.0, -4400.0, -4400.0]);
+	
+	//transform = Scale(gameObject, transform);
+	
 	//mat4.rotateY(transform, degToRad(180));
 	//mat4.rotateY(transform, degToRad(gameObject.transform.rotation[1]));
 	
@@ -85,6 +90,56 @@ function DrawGameObject(gameObject, transform, seconds)
 	{
 		DrawGameObject(gameObject.transform.Gchilds[i],  transform, seconds);
 	}
+}
+
+function Translate(gameObject, transform)
+{
+	var rotationMatrix = mat4.create();
+	rotationMatrix[0] = 1;
+	rotationMatrix[1] = 0;
+	rotationMatrix[2] = 0;
+	rotationMatrix[3] = 0;
+	
+	rotationMatrix[4] = 0;
+	rotationMatrix[5] = 1;
+	rotationMatrix[6] = 0;
+	rotationMatrix[7] = 0;
+	
+	rotationMatrix[8] = 0;
+	rotationMatrix[9] = 0;
+	rotationMatrix[10] = 1;
+	rotationMatrix[11] = 0;
+	
+	rotationMatrix[12] = gameObject.transform.position[0];
+	rotationMatrix[13] = gameObject.transform.position[1];
+	rotationMatrix[14] = gameObject.transform.position[2];
+	rotationMatrix[15] = 1;
+	return mat4.multiply(transform, rotationMatrix);
+}
+
+function Scale(gameObject, transform)
+{
+	var rotationMatrix = mat4.create();
+	rotationMatrix[0] = gameObject.transform.scale[0];
+	rotationMatrix[1] = 0;
+	rotationMatrix[2] = 0;
+	rotationMatrix[3] = 0;
+	
+	rotationMatrix[4] = 0;
+	rotationMatrix[5] = gameObject.transform.scale[1];
+	rotationMatrix[6] = 0;
+	rotationMatrix[7] = 0;
+	
+	rotationMatrix[8] = 0;
+	rotationMatrix[9] = 0;
+	rotationMatrix[10] = gameObject.transform.scale[2];
+	rotationMatrix[11] = 0;
+	
+	rotationMatrix[12] = 0;
+	rotationMatrix[13] = 0;
+	rotationMatrix[14] = 0;
+	rotationMatrix[15] = 1;
+	return mat4.multiply(transform, rotationMatrix);
 }
 
 function lookAt(gameObject, transform, target)
@@ -113,7 +168,7 @@ function lookAt(gameObject, transform, target)
 	temp[2] = 0.0;
 	//console.log(forward[0]);
 	var right = vec3.create();
-	right = vec3.cross(temp, forward);
+	right = vec3.normalize(vec3.cross(temp, forward));
 	//console.log(direction[0]);
 	
 	var gghh= vec3.create();;
@@ -122,7 +177,7 @@ function lookAt(gameObject, transform, target)
 	gghh[2] = forward[2];
 	
 	var up = vec3.create();
-	up = vec3.cross(gghh, right);
+	up = vec3.normalize(vec3.cross(gghh, right));
 	//console.log(forward[0]);
 	
 	//console.log(up[1]);
@@ -151,11 +206,36 @@ function lookAt(gameObject, transform, target)
 	rotationMatrix[10] = forward[2];
 	rotationMatrix[11] =0;
 	
+	rotationMatrix[12] = fromPos[0];
+	rotationMatrix[13] = fromPos[1];
+	rotationMatrix[14] = fromPos[2];
+	rotationMatrix[15] = 1;
+	
+	
+	/*
+	rotationMatrix[0] = right[0];
+	rotationMatrix[1] = up[0];
+	rotationMatrix[2] = forward[0];
+	rotationMatrix[3] = fromPos[0];
+	
+	rotationMatrix[4] = right[1];
+	rotationMatrix[5] = up[1];
+	rotationMatrix[6] = forward[1];
+	rotationMatrix[7] = fromPos[1];
+	
+	rotationMatrix[8] = right[2];
+	rotationMatrix[9] = up[12];
+	rotationMatrix[10] = forward[2];
+	rotationMatrix[11] = fromPos[2];
+	
 	rotationMatrix[12] = 0;
 	rotationMatrix[13] = 0;
 	rotationMatrix[14] = 0;
 	rotationMatrix[15] = 1;
-	/*
+	
+	
+	
+	
 	
 	*/
 	
