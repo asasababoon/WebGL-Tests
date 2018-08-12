@@ -1,7 +1,11 @@
+function NullCreation(_position, _rotation, _scale)
+{
+	return Creation(_position, _rotation, _scale, "Empty", null, null, null, null)
+}
+
 function Creation(_position, _rotation, _scale, _modelName, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes)
 {
 	this.name=_modelName;
-	this.age= 30;
 	this.mesh= [];//= Object
 	this.material= [];//= Object
 	this.transform = [];//= Object
@@ -10,31 +14,47 @@ function Creation(_position, _rotation, _scale, _modelName, _textureData, _shade
 	
 	this.mesh.loaded = false;
 		
-	console.log(_position[1]);
+	//console.log(_position[1]);
 	
 	this.transform.position = _position;
 	this.transform.scale = _scale;
 	this.transform.rotation = _rotation;
+	this.transform.rotationMatrix = mat4.create();
+	mat4.identity(this.transform.rotationMatrix);
+	mat4.rotateX(this.transform.rotationMatrix, degToRad(_rotation[0]));
+	mat4.rotateY(this.transform.rotationMatrix, degToRad(_rotation[1]));
+	mat4.rotateZ(this.transform.rotationMatrix, degToRad(_rotation[2]));
+	
 	this.transform.Gparent = null;
 	this.transform.Gchilds = [];
 	
-	console.log(this.transform.position[1]);
 
+	this.nullObject = (_shaderVertex == null);
+	console.log(this.nullObject);
 
-	this.mesh.dataTypes = [];
-	this.mesh.dataTypes.requireVPos = true;
-	this.mesh.dataTypes.requireUVs = true;
-	this.mesh.dataTypes.requireNormals = false;
-
-	for(let i =0; i < _vertexDataTypes.length; i++)
+	
+	if(this.nullObject == false)
 	{
-		if(_vertexDataTypes[i] == 'vn')
-			this.mesh.dataTypes.requireNormals = true;
+		this.mesh.dataTypes = [];
+		this.mesh.dataTypes.requireVPos = true;
+		this.mesh.dataTypes.requireUVs = true;
+		this.mesh.dataTypes.requireNormals = false;
+
+		for(let i =0; i < _vertexDataTypes.length; i++)
+		{
+			if(_vertexDataTypes[i] == 'vn')
+				this.mesh.dataTypes.requireNormals = true;
+		}
+
+		this.material.uniforms = ["Ambient", "LightPos", "LightCol"];
+		LoadModelG(this, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
 	}
-
-	this.material.uniforms = ["Ambient", "LightPos", "LightCol"];
-	LoadModelG(this, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
-
+	else
+	{
+		this.mesh.loaded = true;
+	}
+		
+	_gameObjects.push(this);
 
 	return this;
 }
@@ -43,6 +63,11 @@ Creation.prototype.sayHi = function() {
   console.log(this.name);
   this.transform.rotation[1] = timePassed * 45;
   this.transform.rotation[2] = timePassed * 9;
+}
+
+Creation.prototype.RotateY = function()
+{
+	mat4.rotateY(this.transform.rotationMatrix, timeDelta * 0.4);
 }
 
 Creation.prototype.SetParent = function(_gParent)

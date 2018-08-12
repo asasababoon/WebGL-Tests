@@ -17,6 +17,8 @@
     var gl;
       
 	var timePassed = 0;
+	var timeDelta = 0;
+
 	let _gameObjects = [];
   
     var effectiveFPMS = 60 / 1000;
@@ -72,7 +74,7 @@
 	{
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
 		gl.enable(gl.DEPTH_TEST);
 		//gl.disable(gl.CULL_FACE);
 		
@@ -86,6 +88,7 @@
 			if(_gameObjects[i].transform.Gparent == null)
 			{
 				mat4.identity(mvMatrix);
+				_gameObjects[i].RotateY();
 				DrawGameObject(_gameObjects[i], mvMatrix, seconds);
 			}
 		}
@@ -105,7 +108,9 @@
 		}
 		if(loadedCount == _gameObjects.length)
 		{	
-			timePassed = (performance.now() / 1000.);
+			var newTimePassed =(performance.now() / 1000.);
+			timeDelta = newTimePassed - timePassed;
+			timePassed = newTimePassed;
 			drawScene(timePassed);
 		}
     }
@@ -122,19 +127,36 @@
 	
 	function CreateGameObjects()
 	{
-	  
-		_gameObjects.push( new Creation([2.0, 0.0, -8.0], [45, 0, 0], [1.0, 1.0, 1.0], "Models/glenn_monkey.obj", "crate.gif", 'shader-fs', 'shader-vs', ['vn']));
-		//_gameObjects[0].gameLogic.sayHi = function() {
-		//  console.log(this.age);
-		//}
+		//var planet = new Creation([0.0, -20.0, -160.0], [0, 0, 0.0], [1,1,1], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
+		var planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Empty", null, null, null, null);
 		
-		let jumboScale = 1./20.;
-		//_gameObjects.push(new Creation([0.0, 1.0, 0.0], [0, 0, 0.0], [jumboScale,jumboScale,jumboScale], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']));
-		//_gameObjects[1].SetParent(_gameObjects[0]);
 		
-		let jmmyScale = 1.;
-		_gameObjects.push(new Creation([0.0, 0.0, -44], [0, 0, 0.0], [jmmyScale,jmmyScale,jmmyScale], "Models/Lowpoly_tree_sample.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']));
-	
+		var radius = 10;
+		for(var i =0; i< 10; i++)
+		{
+			let pos = vec3.scale(GetRandomVec3(), radius);
+			//[pos[0], pos[1], pos[2]]
+			console.log("POS LENGTH " + vec3.length(pos));
+			console.log("POS LENGTH " + vec3.str(pos));
+
+			var lookAtDir = pos;
+			
+			//pos[2] = -160;
+			
+			//var treeHolder = new NullCreation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1]);
+			//var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1], "Empty", null, null, null, null);
+
+			var tree = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1], "Models/Lowpoly_tree_sample.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
+			
+			//mat4.rotateX(tree.transform.rotationMatrix, degToRad(90));
+
+			//tree.transform.rotationMatrix = 
+			//treeHolder.transform.rotationMatrix = LookAt(treeHolder, treeHolder.transform.rotationMatrix, [pos[0] * 2, pos[1] * 2, pos[2]* 2]);
+
+			
+			tree.SetParent(planet);
+			//treeHolder.SetParent(planet);
+		}
 	
 	}
 	

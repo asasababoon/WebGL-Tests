@@ -1,94 +1,87 @@
-function DrawGameObject(gameObject, transform, seconds)
+function DrawGameObject(gameObject, transformOriginal, seconds)
 {
-	gl.useProgram(gameObject.material.shaderProgram);
-			
-	for(let i =0; i < gameObject.material.uniforms.length; i++)
-	{
-		gl.uniform3f(
-			gameObject.material.shaderProgram.ambientColorUniform,
-			uniformsArray[gameObject.material.uniforms[i]][0],
-			uniformsArray[gameObject.material.uniforms[i]][1],
-			uniformsArray[gameObject.material.uniforms[i]][2]
-			);
-	}	
-		  
-	gl.uniform1f(gameObject.material.shaderProgram.time, timePassed);
+	//let transform = 4;
+	let transform = transformOriginal;// CopyMat4(transformOriginal);
 	
+	//let transform = Object.assign({}, transformOriginal);
+	//let transform = JSON.parse(JSON.stringify(transformOriginal));
 
-	// bind the array with values to WEBGL	
-	//
-	// send data to the correct shaderprogram + which attribute, which was bound to a shader attribute earlier
-	//using the itemSize property we set on the buffer to tell WebGL that each item in the buffer is three numbers long.
 	
-	if(gameObject.mesh.dataTypes.requireVPos)
+	//console.log("draw gameObject " + gameObject.name);
+	if(gameObject.nullObject == false)
 	{
-	
-		gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexPositionBuffer);
-		gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexPositionAttribute, gameObject.mesh.cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	}
-	if(gameObject.mesh.dataTypes.requireUVs)
-	{
+		gl.useProgram(gameObject.material.shaderProgram);
+				
+		for(let i =0; i < gameObject.material.uniforms.length; i++)
+		{
+			gl.uniform3f(
+				gameObject.material.shaderProgram.ambientColorUniform,
+				uniformsArray[gameObject.material.uniforms[i]][0],
+				uniformsArray[gameObject.material.uniforms[i]][1],
+				uniformsArray[gameObject.material.uniforms[i]][2]
+				);
+		}	
+			  
+		gl.uniform1f(gameObject.material.shaderProgram.time, timePassed);
 		
-		gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexTextureCoordBuffer);
-		gl.vertexAttribPointer(gameObject.material.shaderProgram.textureCoordAttribute, gameObject.mesh.cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	}
-	if(gameObject.mesh.dataTypes.requireNormals)
-	{
-		gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexNormalBuffer);
-		gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexNormalAttribute, gameObject.mesh.cubeVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-	}
-	
-	/*
-	What’s happening here is somewhat complex. 
-	WebGL can deal with up to 32 textures during any given call to 
-	functions like gl.drawElements, and they’re numbered from TEXTURE0 to TEXTURE31. 
-	What we’re doing is saying in the first two lines that texture zero is the one we loaded earlier,
-	and then in the third line we’re passing the value zero up to a shader uniform 
-	(which, like the other uniforms that we use for the matrices, 
-	we extract from the shader program in initShaders); 
-	this tells the shader that we’re using texture zero. 
-	*/
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, gameObject.material.MainTexture);
-	
-	
-	// set uniform??	
-	gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
 
+		// bind the array with values to WEBGL	
+		//
+		// send data to the correct shaderprogram + which attribute, which was bound to a shader attribute earlier
+		//using the itemSize property we set on the buffer to tell WebGL that each item in the buffer is three numbers long.
+		
+		if(gameObject.mesh.dataTypes.requireVPos)
+		{
+		
+			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexPositionBuffer);
+			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexPositionAttribute, gameObject.mesh.cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		if(gameObject.mesh.dataTypes.requireUVs)
+		{
+			
+			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexTextureCoordBuffer);
+			gl.vertexAttribPointer(gameObject.material.shaderProgram.textureCoordAttribute, gameObject.mesh.cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		if(gameObject.mesh.dataTypes.requireNormals)
+		{
+			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexNormalBuffer);
+			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexNormalAttribute, gameObject.mesh.cubeVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		
+		/*
+		What’s happening here is somewhat complex. 
+		WebGL can deal with up to 32 textures during any given call to 
+		functions like gl.drawElements, and they’re numbered from TEXTURE0 to TEXTURE31. 
+		What we’re doing is saying in the first two lines that texture zero is the one we loaded earlier,
+		and then in the third line we’re passing the value zero up to a shader uniform 
+		(which, like the other uniforms that we use for the matrices, 
+		we extract from the shader program in initShaders); 
+		this tells the shader that we’re using texture zero. 
+		*/
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.MainTexture);
+		
+		
+		// set uniform??	
+		gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
+	}
 	
-	
-	//mat4.translate(transform, gameObject.transform.position);	
-	//mat4.scale(transform, gameObject.transform.scale);
-	
-	
-	
-	//mat4.rotate(transform, degToRad(gameObject.transform.rotation[0]), [1, 0, 0],);
-	//mat4.rotate(transform, degToRad(gameObject.transform.rotation[1]), [0, 1, 0]);
-	
-	
-	
-	//mat4.rotateX(transform, degToRad(gameObject.transform.rotation[0]));
-	//mat4.rotateZ(transform, degToRad(gameObject.transform.rotation[2]));
-	
-	
+
 	
 	transform = Translate(gameObject, transform);
-	transform = lookAt(gameObject, transform, [4400.0, -4400.0, -4400.0]);
+	transform = Rotate(gameObject, transform);
+	transform = Scale(gameObject, transform);
+	//transform = LookAt(gameObject, transform, [4400.0, -4400.0, -4400.0]);
 	
-	//transform = Scale(gameObject, transform);
 	
-	//mat4.rotateY(transform, degToRad(180));
-	//mat4.rotateY(transform, degToRad(gameObject.transform.rotation[1]));
-	
-	//var angle = anglePerSecond * seconds;
-	//mat4.rotate(transform, degToRad(angle), [0.0, -1.0, 0.0]);
-	
-	setMatrixUniforms(gameObject);
-	gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
-	
+	if(gameObject.nullObject == false)
+	{
+		setMatrixUniforms(gameObject);
+		gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
+	}
 	for(let i =0; i < gameObject.transform.Gchilds.length; i++)
 	{
-		DrawGameObject(gameObject.transform.Gchilds[i],  transform, seconds);
+		DrawGameObject(gameObject.transform.Gchilds[i], transform, seconds);
 	}
 }
 
@@ -117,6 +110,12 @@ function Translate(gameObject, transform)
 	return mat4.multiply(transform, rotationMatrix);
 }
 
+
+function Rotate(gameObject, transform)
+{
+	return mat4.multiply(transform, gameObject.transform.rotationMatrix);
+}
+
 function Scale(gameObject, transform)
 {
 	var rotationMatrix = mat4.create();
@@ -142,7 +141,7 @@ function Scale(gameObject, transform)
 	return mat4.multiply(transform, rotationMatrix);
 }
 
-function lookAt(gameObject, transform, target)
+function LookAt(gameObject, transform, target)
 {
 	var fromPos = gameObject.transform.position;
 	//vec3.cross   
@@ -255,10 +254,15 @@ function lookAt(gameObject, transform, target)
 	//rotationMatrix[10] = 0;
 	//rotationMatrix[11] =0;
 	
-	rotationMatrix[12] = 0;
-	rotationMatrix[13] = 0;
-	rotationMatrix[14] = 0;
-	rotationMatrix[15] = 1;
+	
+	
+	
+	
+	
+	//rotationMatrix[12] = 0;
+	//rotationMatrix[13] = 0;
+	//rotationMatrix[14] = 0;
+	//rotationMatrix[15] = 1;
 	return mat4.multiply(transform, rotationMatrix);
 	
 }
@@ -279,6 +283,18 @@ function setMatrixUniforms(gameObject)
     function degToRad(degrees) {
         return degrees * Math.PI / 180;
     }
+	
+	function GetRandomVec3()
+	{
+		var pos = vec3.create();
+		pos[0] = (Math.random() - 0.5) * 2;
+		pos[1] = 0;// (Math.random() - 0.5) * 2;
+		pos[2] = 0;//(Math.random() - 0.5) * 2;
+		
+		pos = vec3.normalize(pos);
+		return pos;
+		
+	}
 	
 	
 	
@@ -304,6 +320,16 @@ function setMatrixUniforms(gameObject)
 		return str.replace(new RegExp(find, 'g'), replace);
 	}
 	
+	
+	
+function CopyMat4(A)
+{
+	var matrix = mat4.create();
+	for(let i =0; i < 16; i++)
+		matrix[i] = A[i];
+	
+	return matrix;
+}
 	
 
 
