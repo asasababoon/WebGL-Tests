@@ -1,11 +1,13 @@
-function DrawGameObject(gameObject, transformOriginal, seconds)
+function DrawGameObject(gameObject, seconds)
 {
 	//let transform = 4;
-	let transform = transformOriginal;// CopyMat4(transformOriginal);
-	
-	//let transform = Object.assign({}, transformOriginal);
+	//let transformLocal = CopyMat4(transformOriginal);
+	//let transformLocal = transformOriginal;
+
+	//let transformLocal = Object.assign({}, transformOriginal);
 	//let transform = JSON.parse(JSON.stringify(transformOriginal));
 
+	//console.log(mat4.str(transform));
 	
 	//console.log("draw gameObject " + gameObject.name);
 	if(gameObject.nullObject == false)
@@ -67,23 +69,66 @@ function DrawGameObject(gameObject, transformOriginal, seconds)
 	}
 	
 
+	let transform = mat4.create();
+	mat4.identity(transform);
+
+	let MatrixList = MatrixesUp(gameObject);
+	for (let i = MatrixList.length - 1; i > -1; i--)
+	{
+		mat4.multiply(transform, MatrixList[i]);
+	}
 	
-	transform = Translate(gameObject, transform);
-	transform = Rotate(gameObject, transform);
-	transform = Scale(gameObject, transform);
+	//let transform = MultiplyMatrixThroughTransform(gameObject, CopyMat4(gameObject.transform.Matrix));
+	
+	//transform = Translate(gameObject, transform);
+	//transform = Rotate(gameObject, transform);
+	//transform = Scale(gameObject, transform);
 	//transform = LookAt(gameObject, transform, [4400.0, -4400.0, -4400.0]);
 	
 	
+
+	
 	if(gameObject.nullObject == false)
 	{
-		setMatrixUniforms(gameObject);
+		setMatrixUniforms(gameObject, transform);
 		gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
 	}
-	for(let i =0; i < gameObject.transform.Gchilds.length; i++)
+	
+}
+
+function MultiplyMatrixThroughTransform(gameObject, matrix)
+{
+	if(gameObject.transform.Gparent != null)
 	{
-		DrawGameObject(gameObject.transform.Gchilds[i], transform, seconds);
+		//matrix = mat4.multiply(CopyMat4(matrix), CopyMat4(gameObject.transform.Gparent.transform.Matrix));
+		
+		matrix = mat4.translate(CopyMat4(gameObject.transform.Gparent.transform.Matrix));
+
+		return MultiplyMatrixThroughTransform(gameObject.transform.Gparent, matrix);
+	}
+	else
+	{
+		return matrix;
 	}
 }
+
+function MatrixesUp(gameObject)
+{
+	var matrixList = [];
+	GetTransformParent(gameObject, matrixList);
+	return matrixList;
+}
+
+function GetTransformParent(gameObject, matrixList)
+{
+	matrixList[matrixList.length] = gameObject.transform.Matrix;
+	
+	if(gameObject.transform.Gparent != null)
+	{
+		GetTransformParent(gameObject.transform.Gparent, matrixList);
+	}
+}
+
 
 function Translate(gameObject, transform)
 {
@@ -268,13 +313,13 @@ function LookAt(gameObject, transform, target)
 }
 
 
-function setMatrixUniforms(gameObject)
+function setMatrixUniforms(gameObject, transform) //mvMatrix
 {
 	gl.uniformMatrix4fv(gameObject.material.shaderProgram.pMatrixUniform, false, pMatrix);
-	gl.uniformMatrix4fv(gameObject.material.shaderProgram.mvMatrixUniform, false, mvMatrix);
+	gl.uniformMatrix4fv(gameObject.material.shaderProgram.mvMatrixUniform, false, transform);
 	
 	var normalMatrix = mat3.create();
-	mat4.toInverseMat3(mvMatrix, normalMatrix);
+	mat4.toInverseMat3(transform, normalMatrix);
 	mat3.transpose(normalMatrix);
 	gl.uniformMatrix3fv(gameObject.material.shaderProgram.nMatrixUniform, false, normalMatrix);
 }
@@ -288,8 +333,8 @@ function setMatrixUniforms(gameObject)
 	{
 		var pos = vec3.create();
 		pos[0] = (Math.random() - 0.5) * 2;
-		pos[1] = 0;// (Math.random() - 0.5) * 2;
-		pos[2] = 0;//(Math.random() - 0.5) * 2;
+		pos[1] = (Math.random() - 0.5) * 2;
+		pos[2] = (Math.random() - 0.5) * 2;
 		
 		pos = vec3.normalize(pos);
 		return pos;

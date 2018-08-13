@@ -16,14 +16,17 @@ function Creation(_position, _rotation, _scale, _modelName, _textureData, _shade
 		
 	//console.log(_position[1]);
 	
-	this.transform.position = _position;
+	this.transform.position = _position;	
 	this.transform.scale = _scale;
 	this.transform.rotation = _rotation;
-	this.transform.rotationMatrix = mat4.create();
-	mat4.identity(this.transform.rotationMatrix);
-	mat4.rotateX(this.transform.rotationMatrix, degToRad(_rotation[0]));
-	mat4.rotateY(this.transform.rotationMatrix, degToRad(_rotation[1]));
-	mat4.rotateZ(this.transform.rotationMatrix, degToRad(_rotation[2]));
+	
+	this.transform.Matrix = mat4.create();
+	mat4.identity(this.transform.Matrix);
+	mat4.translate(this.transform.Matrix, this.transform.position);
+	mat4.rotateX(this.transform.Matrix, degToRad(_rotation[0]));
+	mat4.rotateY(this.transform.Matrix, degToRad(_rotation[1]));
+	mat4.rotateZ(this.transform.Matrix, degToRad(_rotation[2]));
+	mat4.scale(this.transform.Matrix, this.transform.scale);
 	
 	this.transform.Gparent = null;
 	this.transform.Gchilds = [];
@@ -60,14 +63,14 @@ function Creation(_position, _rotation, _scale, _modelName, _textureData, _shade
 }
 
 Creation.prototype.sayHi = function() {
-  console.log(this.name);
-  this.transform.rotation[1] = timePassed * 45;
-  this.transform.rotation[2] = timePassed * 9;
+  //console.log(this.name);
+ // this.transform.rotation[1] = timePassed * 45;
+  //this.transform.rotation[2] = timePassed * 9;
 }
 
 Creation.prototype.RotateY = function()
 {
-	mat4.rotateY(this.transform.rotationMatrix, timeDelta * 0.4);
+	mat4.rotateY(this.transform.Matrix, timeDelta * 0.4);
 }
 
 Creation.prototype.SetParent = function(_gParent)

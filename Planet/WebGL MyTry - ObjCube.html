@@ -85,14 +85,10 @@
 			
 		for(let i =0; i < _gameObjects.length; i++)
 		{			
-			if(_gameObjects[i].transform.Gparent == null)
-			{
-				mat4.identity(mvMatrix);
-				_gameObjects[i].RotateY();
-				DrawGameObject(_gameObjects[i], mvMatrix, seconds);
-			}
+			DrawGameObject(_gameObjects[i], seconds);
 		}
 		
+		_gameObjects[0].RotateY();
 		_gameObjects[0].sayHi();
     }
 
@@ -131,7 +127,7 @@
 		var planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Empty", null, null, null, null);
 		
 		
-		var radius = 10;
+		var radius = 5;
 		for(var i =0; i< 10; i++)
 		{
 			let pos = vec3.scale(GetRandomVec3(), radius);
@@ -144,18 +140,18 @@
 			//pos[2] = -160;
 			
 			//var treeHolder = new NullCreation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1]);
-			//var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1], "Empty", null, null, null, null);
+			var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1], "Empty", null, null, null, null);
 
-			var tree = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1], "Models/Lowpoly_tree_sample.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
+			var tree = new Creation([0, 0, 0.0], [0, 0, 0.0], [1, 1, 1], "Models/Lowpoly_tree_sample.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
 			
-			//mat4.rotateX(tree.transform.rotationMatrix, degToRad(90));
+			mat4.rotateX(tree.transform.Matrix, degToRad(-90));
 
 			//tree.transform.rotationMatrix = 
-			//treeHolder.transform.rotationMatrix = LookAt(treeHolder, treeHolder.transform.rotationMatrix, [pos[0] * 2, pos[1] * 2, pos[2]* 2]);
+			treeHolder.transform.Matrix = LookAt(treeHolder, treeHolder.transform.Matrix, [pos[0] * 2, pos[1] * 2, pos[2]* 2]);
 
 			
-			tree.SetParent(planet);
-			//treeHolder.SetParent(planet);
+			tree.SetParent(treeHolder);
+			treeHolder.SetParent(planet);
 		}
 	
 	}
