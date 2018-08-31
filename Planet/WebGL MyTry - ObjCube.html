@@ -10,6 +10,7 @@
 <script type="text/javascript" src="ModelLoader.js"></script>
 <script type="text/javascript" src="TextureLoader.js"></script>
 <script type="text/javascript" src="HelperFunctions.js"></script>
+<script type="text/javascript" src="Primitives.js"></script>
 
 
 
@@ -93,33 +94,75 @@
     }
 
 
-    function tick() {
+    function tick() 
+	{
         requestAnimFrame(tick);
 		
-		let loadedCount = 0;
-		for(let i =0; i < _gameObjects.length; i++)
+		let readyCount = 0;
+		for(let i = 0; i < _gameObjects.length; i++)
 		{
-			if(_gameObjects[i].mesh.loaded)
-			loadedCount ++;
+			if(_gameObjects[i].Ready)
+			readyCount ++;
 		}
-		if(loadedCount == _gameObjects.length)
+		
+		
+		if(readyCount == _gameObjects.length)
 		{	
 			var newTimePassed =(performance.now() / 1000.);
 			timeDelta = newTimePassed - timePassed;
 			timePassed = newTimePassed;
 			drawScene(timePassed);
 		}
+		else if(modelsAllReady && textureLoadingStarted == false)
+		{
+			console.log("load textures " );
+			LoadTextures();
+		}
+		else if(modelsAllReady && texturesAllReady)
+		{
+			console.log("ready up remainingGameObjects " );
+			for(let i = 0; i < _gameObjects.length; i++)
+			{
+				if(_gameObjects[i].Ready == false)
+				{
+					_gameObjects[i].Ready = true;
+					
+					let meshTag = _gameObjects[i].mesh.Tag;
+					if(meshTag != null)_gameObjects[i].AddModel(modelsReady[meshTag]);
+					
+					let textureTag = _gameObjects[i].material.textures.Tag;
+					if(textureTag)_gameObjects[i].AddTexture(texturesReady[textureTag]);
+				}
+			}
+		}
     }
-    function webGLStart() {
+	
+    function webGLStart() 
+	{
         var canvas = document.getElementById("glenns-canvas");
         initGL(canvas);
 	
+		SetupModels();		
+		SetupTextures();
 		CreateGameObjects();
 	
+		LoadModels();
+
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         tick();
     }
 	
+	function SetupModels()
+	{	
+		AddModel(CreateShpere(19, 10), "Sphere");
+		PrepareLoadModel("Models/Lowpoly_tree_sample.obj", "Tree");
+		PrepareLoadModel("Models/glenn_monkey.obj", "Monkey");
+	}
+	
+	function SetupTextures()
+	{
+		PrepareLoadTexture("Textures/Apple/appleD.jpg", "Apple_Albedo");	
+	}
 	
 	function CreateGameObjects()
 	{
@@ -127,31 +170,24 @@
 		//var planet = new Creation([0.0, -20.0, -160.0], [0, 0, 0.0], [1,1,1], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
 		//var planet = new Creation([0.0, 0.0, -600.0], [0, 0, 0.0], [0.1,0.1,0.1], "Models/Orange.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
 
-		var planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Empty", null, null, null, null);
+		var planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
 		
 		
-		var radius = 5;
+		var radius = 10;
 		for(var i =0; i< 10; i++)
 		{
-			let pos = vec3.scale(GetRandomVec3(), radius);
+			let pos = vec3.scale(GetRandomVec3Normalized(), radius);
 			//[pos[0], pos[1], pos[2]]
 			console.log("POS LENGTH " + vec3.length(pos));
 			console.log("POS LENGTH " + vec3.str(pos));
-
-			var lookAtDir = pos;
 			
-			//pos[2] = -160;
+			var scaleFactor = 1.0;
+			var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1 * scaleFactor, 1 * scaleFactor, 1 * scaleFactor], "TreeHolder", null, null, null, null, null);
+
+			var tree = new Creation([0, 0, 0.0], [0, 0, 0.0], [1, 1, 1], "Tree", "Tree", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
 			
-			//var treeHolder = new NullCreation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1]);
-			var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1, 1, 1], "Empty", null, null, null, null);
-
-			var tree = new Creation([0, 0, 0.0], [0, 0, 0.0], [1, 1, 1], "Models/Lowpoly_tree_sample.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
-			
-			mat4.rotateX(tree.transform.Matrix, degToRad(-90));
-
-			//tree.transform.rotationMatrix = 
-			treeHolder.transform.Matrix = LookAt(treeHolder, treeHolder.transform.Matrix, [pos[0] * 2, pos[1] * 2, pos[2]* 2]);
-
+			mat4.rotateX(tree.transform.Matrix, DegToRad(-90));
+			LookAt(treeHolder, [pos[0] * 2, pos[1] * 2, pos[2]* 2]);
 			
 			tree.SetParent(treeHolder);
 			treeHolder.SetParent(planet);
@@ -172,7 +208,9 @@
 	varying vec2 vTextureCoord;
 	varying vec3 vTransformedNormal;
 	varying vec4 vPosition;
-    
+
+    uniform float gTime2;
+
 	uniform vec3 uAmbientColor;
 	uniform vec3 uPointLightingLocation;
 	uniform vec3 uPointLightingColor;
@@ -186,11 +224,33 @@
 
 		float directionalLightWeighting = max(dot(normalize(vTransformedNormal), lightDirection), 0.0);
 		lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
-		//lightWeighting *= sin(gTime);
-	
-		//lightWeighting.xyz = vec3(1.,1.,1.);
+		
         vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-		gl_FragColor = vec4(textureColor.rgb * lightWeighting, textureColor.a);
+		
+		
+		
+		
+		float offSet = gTime2 * 14.0;
+		vec3 origin = vec3(0.0, 0.0, -160.0);
+		vec3 pos = vec3(vPosition.x, vPosition.y, vPosition.z);
+		
+		float distance = distance(pos, origin) - offSet;
+		
+		float calm = 5.0;
+		float active = 10.0;
+		float totalRange = calm + active;
+		
+		float progress = abs(mod(distance, totalRange));// / totalRange;
+		
+		float activePercentage = clamp((progress - calm) / active, 0.0, 1.0);
+		
+
+		float power = activePercentage * 2.0 - 1.0;
+		power = abs(power);
+		power = 1.0 - power;
+		
+		vec4 extra = vec4(0.0, 1.0, 0.0, 1.0) * power;
+		gl_FragColor = vec4(textureColor.rgb * lightWeighting, textureColor.a) + extra;
     }
 </script>
 
@@ -215,11 +275,9 @@
 
 		vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
 		
-		
-		
-		//vPosition.y *= (1.0 + sin(gTime) * 0.7);
-		//vPosition.xyz += vTransformedNormal.xyz * sin(gTime) * 0.2;
-		
+	
+	
+	
 		gl_Position = uPMatrix * vPosition;
 		vTextureCoord = aTextureCoord;
     }

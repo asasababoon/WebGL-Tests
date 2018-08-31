@@ -10,14 +10,17 @@ function DrawGameObject(gameObject, seconds)
 	//console.log(mat4.str(transform));
 	
 	//console.log("draw gameObject " + gameObject.name);
-	if(gameObject.nullObject == false)
+	if(gameObject.NullObject == false)
 	{
+			
+
 		gl.useProgram(gameObject.material.shaderProgram);
 				
 		for(let i =0; i < gameObject.material.uniforms.length; i++)
 		{
+
 			gl.uniform3f(
-				gameObject.material.shaderProgram.ambientColorUniform,
+				gameObject.material.shaderProgram.uniforms[i],
 				uniformsArray[gameObject.material.uniforms[i]][0],
 				uniformsArray[gameObject.material.uniforms[i]][1],
 				uniformsArray[gameObject.material.uniforms[i]][2]
@@ -25,7 +28,8 @@ function DrawGameObject(gameObject, seconds)
 		}	
 			  
 		gl.uniform1f(gameObject.material.shaderProgram.time, timePassed);
-		
+		gl.uniform1f(gameObject.material.shaderProgram.time2, timePassed);
+
 
 		// bind the array with values to WEBGL	
 		//
@@ -34,7 +38,7 @@ function DrawGameObject(gameObject, seconds)
 		
 		if(gameObject.mesh.dataTypes.requireVPos)
 		{
-		
+
 			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexPositionBuffer);
 			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexPositionAttribute, gameObject.mesh.cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
@@ -61,7 +65,7 @@ function DrawGameObject(gameObject, seconds)
 		this tells the shader that we’re using texture zero. 
 		*/
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.MainTexture);
+		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textures.MainTexture);
 		
 		
 		// set uniform??	
@@ -88,8 +92,10 @@ function DrawGameObject(gameObject, seconds)
 	
 
 	
-	if(gameObject.nullObject == false)
+	if(gameObject.NullObject == false)
 	{
+					//console.log("draw soemthing  " + gameObject.mesh.totalVertexCount);
+
 		setMatrixUniforms(gameObject, transform);
 		gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
 	}
@@ -186,7 +192,7 @@ function Scale(gameObject, transform)
 	return mat4.multiply(transform, rotationMatrix);
 }
 
-function LookAt(gameObject, transform, target)
+function LookAt(gameObject, target)
 {
 	var fromPos = gameObject.transform.position;
 	//vec3.cross   
@@ -250,9 +256,9 @@ function LookAt(gameObject, transform, target)
 	rotationMatrix[10] = forward[2];
 	rotationMatrix[11] =0;
 	
-	rotationMatrix[12] = fromPos[0];
-	rotationMatrix[13] = fromPos[1];
-	rotationMatrix[14] = fromPos[2];
+	rotationMatrix[12] = 0;//fromPos[0];
+	rotationMatrix[13] = 0;//fromPos[1];
+	rotationMatrix[14] = 0;//fromPos[2];
 	rotationMatrix[15] = 1;
 	
 	
@@ -308,7 +314,7 @@ function LookAt(gameObject, transform, target)
 	//rotationMatrix[13] = 0;
 	//rotationMatrix[14] = 0;
 	//rotationMatrix[15] = 1;
-	return mat4.multiply(transform, rotationMatrix);
+	return mat4.multiply(gameObject.transform.Matrix, rotationMatrix);
 	
 }
 
@@ -325,11 +331,11 @@ function setMatrixUniforms(gameObject, transform) //mvMatrix
 }
 
 
-    function degToRad(degrees) {
-        return degrees * Math.PI / 180;
+    function DegToRad(degrees) {
+        return degrees * (Math.PI / 180);
     }
 	
-	function GetRandomVec3()
+	function GetRandomVec3Normalized()
 	{
 		var pos = vec3.create();
 		pos[0] = (Math.random() - 0.5) * 2;

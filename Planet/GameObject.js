@@ -3,16 +3,17 @@ function NullCreation(_position, _rotation, _scale)
 	return Creation(_position, _rotation, _scale, "Empty", null, null, null, null)
 }
 
-function Creation(_position, _rotation, _scale, _modelName, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes)
+function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _shaderVertex, _shaderFragment, _vertexDataTypes)
 {
-	this.name=_modelName;
+	this.name= _name;
 	this.mesh= [];//= Object
 	this.material= [];//= Object
+	this.material.textures = [];//= Object
 	this.transform = [];//= Object
 	
 	this.gameLogic = [];//= Object
 	
-	this.mesh.loaded = false;
+	this.Ready = false;
 		
 	//console.log(_position[1]);
 	
@@ -23,20 +24,24 @@ function Creation(_position, _rotation, _scale, _modelName, _textureData, _shade
 	this.transform.Matrix = mat4.create();
 	mat4.identity(this.transform.Matrix);
 	mat4.translate(this.transform.Matrix, this.transform.position);
-	mat4.rotateX(this.transform.Matrix, degToRad(_rotation[0]));
-	mat4.rotateY(this.transform.Matrix, degToRad(_rotation[1]));
-	mat4.rotateZ(this.transform.Matrix, degToRad(_rotation[2]));
+	mat4.rotateX(this.transform.Matrix, DegToRad(_rotation[0]));
+	mat4.rotateY(this.transform.Matrix, DegToRad(_rotation[1]));
+	mat4.rotateZ(this.transform.Matrix, DegToRad(_rotation[2]));
 	mat4.scale(this.transform.Matrix, this.transform.scale);
 	
 	this.transform.Gparent = null;
 	this.transform.Gchilds = [];
 	
+	this.mesh.Tag = _modelTag;
 
-	this.nullObject = (_shaderVertex == null);
-	console.log(this.nullObject);
+	this.NullObject = (_modelTag == null);
+	console.log("gameobject is null Trandform " + this.NullObject);
 
 	
-	if(this.nullObject == false)
+	this.material.textures.MainTexture = null;
+	this.material.textures.Tag = _textureTag;
+	
+	if(this.NullObject == false)
 	{
 		this.mesh.dataTypes = [];
 		this.mesh.dataTypes.requireVPos = true;
@@ -50,20 +55,34 @@ function Creation(_position, _rotation, _scale, _modelName, _textureData, _shade
 		}
 
 		this.material.uniforms = ["Ambient", "LightPos", "LightCol"];
-		LoadModelG(this, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
+		
+		this.material.shaderVertex = _shaderVertex;
+		this.material.shaderFragment = _shaderFragment;
+		this.material.shaderProgram = initShaders(this);
+		
+		//LoadModelG(this, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
 	}
 	else
 	{
-		this.mesh.loaded = true;
+		this.Ready = true;
 	}
 		
 	_gameObjects.push(this);
-
 	return this;
 }
 
+Creation.prototype.AddModel = function(_model)
+{
+	SetModel(_model, this);
+}
+
+Creation.prototype.AddTexture = function(_texture)
+{
+	this.material.textures.MainTexture = _texture;
+}
+
 Creation.prototype.sayHi = function() {
-  //console.log(this.name);
+  console.log(this.name + " Says HI");
  // this.transform.rotation[1] = timePassed * 45;
   //this.transform.rotation[2] = timePassed * 9;
 }
@@ -99,7 +118,8 @@ Creation.prototype.RemoveChild = function(_gChild)
 
 function SetGraphics(_gameObject, _modelData, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes)
 {
-	LoadModelDirect(_modelData, _gameObject);
+	SetModel(LoadModelDirect(_modelData), gameObject);
+
 	LoadTexture(_textureData, _gameObject);
 	
 	_gameObject.material.shaderVertex = _shaderVertex;
@@ -166,10 +186,16 @@ function LoadModelG(_gameObject, _textureData, _shaderVertex, _shaderFragment, _
 		shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
         shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
 		shaderProgram.time = gl.getUniformLocation(shaderProgram, "gTime");
+		shaderProgram.time2 = gl.getUniformLocation(shaderProgram, "gTime2");
 
 		shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
         shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
         shaderProgram.pointLightingColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingColor");
+		
+		shaderProgram.uniforms = [];
+		shaderProgram.uniforms[0] = shaderProgram.ambientColorUniform;
+		shaderProgram.uniforms[1] = shaderProgram.pointLightingLocationUniform;
+		shaderProgram.uniforms[2] = shaderProgram.pointLightingColorUniform;
 		
 		return shaderProgram;
     }

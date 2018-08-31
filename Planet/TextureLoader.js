@@ -1,18 +1,70 @@
-function LoadTexture(data, gameObject) 
+
+var textureLoadingStarted = false;
+var texturesAllReady = false;
+var texturesToLoad = [];
+var texturesReady = [];
+
+function AddTexture(_texture, _tag)
 {
-	gameObject.material.MainTexture = gl.createTexture();
-	gameObject.material.MainTexture.image = new Image();
-	gameObject.material.MainTexture.image.onload = function () {
-		handleLoadedTexture(gameObject.material.MainTexture)
+	console.log("AddTexture " + _tag);
+
+	texturesReady[_tag] = _texture;
+}
+
+function PrepareLoadTexture(_path, _tag)
+{
+	texturesToLoad.push(_path);
+	texturesToLoad.push(_tag);
+}
+
+function LoadTextures()
+{
+	textureLoadingStarted = true;
+	LoadNextTexture();
+}
+
+function LoadNextTexture()
+{
+	if(texturesToLoad.length == 0)
+	{
+		texturesAllReady = true;
+		return;
+	}
+	
+	var path = JSON.parse(JSON.stringify( texturesToLoad[0] ));
+	var tag = JSON.parse(JSON.stringify( texturesToLoad[1] ));
+	
+	
+	var texture = gl.createTexture();
+	texture.image = new Image();
+	texture.image.onload = function () 
+	{
+		console.log("Texture Loaded " + tag);
+
+		handleLoadedTexture(texture)
+		TextureLoaded(texture, tag);
 	}
 
+	texture.image.src = path;
 	
-	
-	gameObject.material.MainTexture.image.src = data;
-	// cubeTexture.image.src = "mud.gif";
+	texturesToLoad.shift(); // Removes the first element
+	texturesToLoad.shift();
 }
+
+
+function TextureLoaded(_texture, _tag)
+{
+	AddTexture(_texture, _tag);
+	LoadNextTexture();
+}
+
+
+
+
+
 	
-function handleLoadedTexture(texture) {
+function handleLoadedTexture(texture) 
+{
 	
 	//unpacking method??
 	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);

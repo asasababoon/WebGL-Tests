@@ -1,7 +1,82 @@
- var appel = 0.5;
- 
+function Model(_positions, _uvs, _normals)
+{	
+	this.vertexPositions = _positions;
+	this.vertexTextureCoords = _uvs;
+	this.vertexNormals = _normals;
+	this.totalVertexCount = _positions.length / 3;
+}
 
-function LoadModelDirect(_data, gameObject) 
+var modelsAllReady = false;
+var modelsToLoad = [];
+var modelsReady = [];
+
+function AddModel(_model, _tag)
+{
+	modelsReady[_tag] = _model;
+}
+
+function PrepareLoadModel(_path, _tag)
+{
+	modelsToLoad.push(_path);
+	modelsToLoad.push(_tag);
+}
+
+function LoadModels()
+{
+	LoadNextModel();
+}
+
+function LoadNextModel()
+{
+	if(modelsToLoad.length == 0)
+	{
+		modelsAllReady = true;
+		return;
+	}
+	
+	var path = JSON.parse(JSON.stringify( modelsToLoad[0] ));
+	var tag = JSON.parse(JSON.stringify( modelsToLoad[1] ));
+	
+	var request = new XMLHttpRequest();
+	request.open("GET", path);
+	request.onreadystatechange = function () 
+	{
+		if (request.readyState == 4)
+		{	
+			ModelLoaded(LoadModelDirect(request.responseText), tag);
+			//SetGraphics(_gameObject, request.responseText, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
+		}
+	}
+	request.send();
+	
+	modelsToLoad.shift(); // Removes the first element
+	modelsToLoad.shift();
+}
+
+
+function ModelLoaded(_model, _tag)
+{
+	AddModel(_model, _tag);
+	LoadNextModel();
+}
+	
+	
+function LoadModelOBJ(_gameObject, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes) 
+{
+	var request = new XMLHttpRequest();
+	request.open("GET", _gameObject.name);
+	request.onreadystatechange = function () {
+		if (request.readyState == 4)
+		{	
+			LoadModelDirect(request.responseText);
+			//SetGraphics(_gameObject, request.responseText, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
+		}
+	}
+	request.send();
+}
+
+
+function LoadModelDirect(_data) 
 {
 	var lines = (_data + '').split("\n");
 	var vertexCount = 0;
@@ -52,13 +127,12 @@ function LoadModelDirect(_data, gameObject)
 			}
 		}
 	}
-	
 
-	SetModel([vertexPositions, vertexTextureCoords, vertexNormals], vertexPositions.length / 3, gameObject);
+	var model = new Model(vertexPositions, vertexTextureCoords, vertexNormals);
+	return model;
 }
 
-
-function SetModel(_data, totalVertexCount, gameObject)
+function SetModel(_model, gameObject)
 {	
 	var cubeVertexPositionBuffer = null;
 	var cubeVertexNormalBuffer = null;
@@ -70,7 +144,7 @@ function SetModel(_data, totalVertexCount, gameObject)
 		//vertexes
 		cubeVertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_data[0]), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexPositions), gl.STATIC_DRAW);
 		
 		gameObject.mesh.cubeVertexPositionBuffer = cubeVertexPositionBuffer;	
 		gameObject.mesh.cubeVertexPositionBuffer.itemSize = 3;
@@ -82,7 +156,7 @@ function SetModel(_data, totalVertexCount, gameObject)
 		//uvs
 		cubeVertexTextureCoordBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_data[1]), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexTextureCoords), gl.STATIC_DRAW);
 		
 		gameObject.mesh.cubeVertexTextureCoordBuffer = cubeVertexTextureCoordBuffer;	
 		gameObject.mesh.cubeVertexTextureCoordBuffer.itemSize = 2;			
@@ -94,14 +168,14 @@ function SetModel(_data, totalVertexCount, gameObject)
 		// normals
 		cubeVertexNormalBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexNormalBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_data[2]), gl.STATIC_DRAW);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexNormals), gl.STATIC_DRAW);
 		
 		gameObject.mesh.cubeVertexNormalBuffer = cubeVertexNormalBuffer;	
 		gameObject.mesh.cubeVertexNormalBuffer.itemSize = 3;
 	}
 	
 
-	gameObject.mesh.totalVertexCount = totalVertexCount;	
+	gameObject.mesh.totalVertexCount = _model.totalVertexCount;	
 }
 	
 function LoadFaces(values, 
