@@ -1,24 +1,14 @@
+var mvMatrix = mat4.create();
+var pMatrix = mat4.create();
+
 function DrawGameObject(gameObject, seconds)
 {
-	//let transform = 4;
-	//let transformLocal = CopyMat4(transformOriginal);
-	//let transformLocal = transformOriginal;
-
-	//let transformLocal = Object.assign({}, transformOriginal);
-	//let transform = JSON.parse(JSON.stringify(transformOriginal));
-
-	//console.log(mat4.str(transform));
-	
 	//console.log("draw gameObject " + gameObject.name);
 	if(gameObject.NullObject == false)
 	{
-			
-
-		gl.useProgram(gameObject.material.shaderProgram);
-				
+		gl.useProgram(gameObject.material.shaderProgram);		
 		for(let i =0; i < gameObject.material.uniforms.length; i++)
 		{
-
 			gl.uniform3f(
 				gameObject.material.shaderProgram.uniforms[i],
 				uniformsArray[gameObject.material.uniforms[i]][0],
@@ -34,8 +24,7 @@ function DrawGameObject(gameObject, seconds)
 		// bind the array with values to WEBGL	
 		//
 		// send data to the correct shaderprogram + which attribute, which was bound to a shader attribute earlier
-		//using the itemSize property we set on the buffer to tell WebGL that each item in the buffer is three numbers long.
-		
+		//using the itemSize property we set on the buffer to tell WebGL that each item in the buffer is three numbers long.	
 		if(gameObject.mesh.dataTypes.requireVPos)
 		{
 
@@ -66,13 +55,11 @@ function DrawGameObject(gameObject, seconds)
 		*/
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textures.MainTexture);
-		
-		
+			
 		// set uniform??	
 		gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
 	}
 	
-
 	let transform = mat4.create();
 	mat4.identity(transform);
 
@@ -82,58 +69,69 @@ function DrawGameObject(gameObject, seconds)
 		mat4.multiply(transform, MatrixList[i]);
 	}
 	
-	//let transform = MultiplyMatrixThroughTransform(gameObject, CopyMat4(gameObject.transform.Matrix));
-	
-	//transform = Translate(gameObject, transform);
-	//transform = Rotate(gameObject, transform);
-	//transform = Scale(gameObject, transform);
-	//transform = LookAt(gameObject, transform, [4400.0, -4400.0, -4400.0]);
-	
-	
-
-	
 	if(gameObject.NullObject == false)
 	{
-					//console.log("draw soemthing  " + gameObject.mesh.totalVertexCount);
-
 		setMatrixUniforms(gameObject, transform);
 		gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
 	}
 	
 }
 
-function MultiplyMatrixThroughTransform(gameObject, matrix)
+function DrawGameObjectRT(gameObject)
 {
-	if(gameObject.transform.Gparent != null)
+	if(gameObject.NullObject == false)
 	{
-		//matrix = mat4.multiply(CopyMat4(matrix), CopyMat4(gameObject.transform.Gparent.transform.Matrix));
+		gl.useProgram(gameObject.material.shaderProgram);		
+		for(let i =0; i < gameObject.material.uniforms.length; i++)
+		{
+			gl.uniform3f(
+				gameObject.material.shaderProgram.uniforms[i],
+				uniformsArray[gameObject.material.uniforms[i]][0],
+				uniformsArray[gameObject.material.uniforms[i]][1],
+				uniformsArray[gameObject.material.uniforms[i]][2]
+				);
+		}	
+			  	
+		if(gameObject.mesh.dataTypes.requireVPos)
+		{
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexPositionBuffer);
+			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexPositionAttribute, gameObject.mesh.cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		if(gameObject.mesh.dataTypes.requireUVs)
+		{
+			
+			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexTextureCoordBuffer);
+			gl.vertexAttribPointer(gameObject.material.shaderProgram.textureCoordAttribute, gameObject.mesh.cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		if(gameObject.mesh.dataTypes.requireNormals)
+		{
+			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexNormalBuffer);
+			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexNormalAttribute, gameObject.mesh.cubeVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
 		
-		matrix = mat4.translate(CopyMat4(gameObject.transform.Gparent.transform.Matrix));
 
-		return MultiplyMatrixThroughTransform(gameObject.transform.Gparent, matrix);
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textures.MainTexture);		
+		gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
 	}
-	else
-	{
-		return matrix;
-	}
-}
-
-function MatrixesUp(gameObject)
-{
-	var matrixList = [];
-	GetTransformParent(gameObject, matrixList);
-	return matrixList;
-}
-
-function GetTransformParent(gameObject, matrixList)
-{
-	matrixList[matrixList.length] = gameObject.transform.Matrix;
 	
-	if(gameObject.transform.Gparent != null)
+	let transform = mat4.create();
+	mat4.identity(transform);
+
+	let MatrixList = MatrixesUp(gameObject);
+	for (let i = MatrixList.length - 1; i > -1; i--)
 	{
-		GetTransformParent(gameObject.transform.Gparent, matrixList);
+		mat4.multiply(transform, MatrixList[i]);
+	}
+	
+	if(gameObject.NullObject == false)
+	{
+		setMatrixUniforms(gameObject, transform);
+		gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
 	}
 }
+
 
 
 function Translate(gameObject, transform)
@@ -331,47 +329,28 @@ function setMatrixUniforms(gameObject, transform) //mvMatrix
 }
 
 
-    function DegToRad(degrees) {
-        return degrees * (Math.PI / 180);
-    }
+function DegToRad(degrees) {
+	return degrees * (Math.PI / 180);
+}
+
+function GetRandomVec3Normalized()
+{
+	var pos = vec3.create();
+	pos[0] = (Math.random() - 0.5) * 2;
+	pos[1] = (Math.random() - 0.5) * 2;
+	pos[2] = (Math.random() - 0.5) * 2;
 	
-	function GetRandomVec3Normalized()
-	{
-		var pos = vec3.create();
-		pos[0] = (Math.random() - 0.5) * 2;
-		pos[1] = (Math.random() - 0.5) * 2;
-		pos[2] = (Math.random() - 0.5) * 2;
-		
-		pos = vec3.normalize(pos);
-		return pos;
-		
-	}
+	pos = vec3.normalize(pos);
+	return pos;
 	
+}
 	
-	
-	var mvMatrix = mat4.create();
-    var mvMatrixStack = [];
-    var pMatrix = mat4.create();
-    function mvPushMatrix() {
-        var copy = mat4.create();
-        mat4.set(mvMatrix, copy);
-        mvMatrixStack.push(copy);
-    }
-    function mvPopMatrix() {
-        if (mvMatrixStack.length == 0) {
-            throw "Invalid popMatrix!";
-        }
-        mvMatrix = mvMatrixStack.pop();
-    }
 
 
-	
-	function replaceAll(str, find, replace) 
-	{
-		return str.replace(new RegExp(find, 'g'), replace);
-	}
-	
-	
+function replaceAll(str, find, replace) 
+{
+	return str.replace(new RegExp(find, 'g'), replace);
+}	
 	
 function CopyMat4(A)
 {
@@ -383,6 +362,22 @@ function CopyMat4(A)
 }
 	
 
+function MatrixesUp(gameObject)
+{
+	var matrixList = [];
+	GetTransformParent(gameObject, matrixList);
+	return matrixList;
+}
+
+function GetTransformParent(gameObject, matrixList)
+{
+	matrixList[matrixList.length] = gameObject.transform.Matrix;
+	
+	if(gameObject.transform.Gparent != null)
+	{
+		GetTransformParent(gameObject.transform.Gparent, matrixList);
+	}
+}
 
 
 

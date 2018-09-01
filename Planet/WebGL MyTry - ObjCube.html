@@ -73,11 +73,14 @@
 
     function drawScene(seconds) 
 	{
+		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
+	//////
+	
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
 		gl.enable(gl.DEPTH_TEST);
-		//gl.disable(gl.CULL_FACE);
+		//gl.enable(gl.CULL_FACE);
 		
 		
 		uniformsArray["Ambient"] = [parseFloat(document.getElementById("ambientR").value), parseFloat(document.getElementById("ambientG").value), parseFloat(document.getElementById("ambientB").value)];
@@ -91,6 +94,23 @@
 		
 		_gameObjects[0].RotateY();
 		_gameObjects[0].sayHi();
+		
+		
+		//////
+
+		gl.bindTexture(gl.TEXTURE_2D, rttTexture);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+		
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		
+		// draw to quad
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+		DrawGameObjectRT(screenQuad);
+		screenQuad.RotateY();
+		
+
     }
 
 
@@ -121,47 +141,89 @@
 		else if(modelsAllReady && texturesAllReady)
 		{
 			console.log("ready up remainingGameObjects " );
+			ReadyUpGameObject(screenQuad);
 			for(let i = 0; i < _gameObjects.length; i++)
 			{
 				if(_gameObjects[i].Ready == false)
 				{
-					_gameObjects[i].Ready = true;
-					
-					let meshTag = _gameObjects[i].mesh.Tag;
-					if(meshTag != null)_gameObjects[i].AddModel(modelsReady[meshTag]);
-					
-					let textureTag = _gameObjects[i].material.textures.Tag;
-					if(textureTag)_gameObjects[i].AddTexture(texturesReady[textureTag]);
+					ReadyUpGameObject(_gameObjects[i]);
 				}
 			}
 		}
     }
 	
+	function ReadyUpGameObject(_gameObject)
+	{
+		_gameObject.Ready = true;
+					
+		let meshTag = _gameObject.mesh.Tag;
+		if(meshTag != null)_gameObject.AddModel(modelsReady[meshTag]);
+		
+		let textureTag = _gameObject.material.textures.Tag;
+		if(textureTag)_gameObject.AddTexture(texturesReady[textureTag]);
+	}
+	
+	var screenQuad;
     function webGLStart() 
 	{
         var canvas = document.getElementById("glenns-canvas");
         initGL(canvas);
+		initTextureFramebuffer();
 	
 		SetupModels();		
 		SetupTextures();
 		CreateGameObjects();
-	
+		
+		screenQuad = new Creation([0.0, 0.0, -3.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture", 'shader-fss', 'shader-vss', ['vn']);
 		LoadModels();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         tick();
     }
 	
+	var rttFramebuffer;
+	var rttTexture;
+
+	function initTextureFramebuffer() 
+	{
+		rttFramebuffer = gl.createFramebuffer();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
+		rttFramebuffer.width = 512;
+		rttFramebuffer.height = 512;
+		
+		rttTexture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, rttTexture);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+		gl.generateMipmap(gl.TEXTURE_2D);
+		
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, rttFramebuffer.width, rttFramebuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+		
+		
+		var renderbuffer = gl.createRenderbuffer();
+		gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, rttFramebuffer.width, rttFramebuffer.height);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, rttTexture, 0);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+		
+		
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	}
+	
 	function SetupModels()
 	{	
 		AddModel(CreateShpere(19, 10), "Sphere");
+		AddModel(CreateQuad(), "Quad");
 		PrepareLoadModel("Models/Lowpoly_tree_sample.obj", "Tree");
 		PrepareLoadModel("Models/glenn_monkey.obj", "Monkey");
 	}
 	
 	function SetupTextures()
 	{
-		PrepareLoadTexture("Textures/Apple/appleD.jpg", "Apple_Albedo");	
+		PrepareLoadTexture("Textures/Apple/appleD.jpg", "Apple_Albedo");
+		AddTexture(rttTexture, "rttTexture");
 	}
 	
 	function CreateGameObjects()
@@ -171,7 +233,8 @@
 		//var planet = new Creation([0.0, 0.0, -600.0], [0, 0, 0.0], [0.1,0.1,0.1], "Models/Orange.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
 
 		var planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
-		
+		_gameObjects.push(planet);
+
 		
 		var radius = 10;
 		for(var i =0; i< 10; i++)
@@ -183,9 +246,11 @@
 			
 			var scaleFactor = 1.0;
 			var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1 * scaleFactor, 1 * scaleFactor, 1 * scaleFactor], "TreeHolder", null, null, null, null, null);
+			_gameObjects.push(treeHolder);
 
 			var tree = new Creation([0, 0, 0.0], [0, 0, 0.0], [1, 1, 1], "Tree", "Tree", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
-			
+			_gameObjects.push(tree);
+
 			mat4.rotateX(tree.transform.Matrix, DegToRad(-90));
 			LookAt(treeHolder, [pos[0] * 2, pos[1] * 2, pos[2]* 2]);
 			
@@ -249,7 +314,7 @@
 		power = abs(power);
 		power = 1.0 - power;
 		
-		vec4 extra = vec4(0.0, 1.0, 0.0, 1.0) * power;
+		vec4 extra = vec4(1.0, 0.0, 0.0, 1.0) * power;
 		gl_FragColor = vec4(textureColor.rgb * lightWeighting, textureColor.a) + extra;
     }
 </script>
@@ -287,13 +352,13 @@
 
 
 
-
 <script id="shader-fss" type="x-shader/x-fragment">
     precision mediump float;
 	
 	varying vec2 vTextureCoord;
+	varying vec3 vTransformedNormal;
 	varying vec4 vPosition;
-    
+
 	uniform vec3 uAmbientColor;
 	uniform vec3 uPointLightingLocation;
 	uniform vec3 uPointLightingColor;
@@ -301,35 +366,31 @@
 	uniform sampler2D uSampler;
     void main(void) 
 	{
-	   
         vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-		gl_FragColor = textureColor;
-		gl_FragColor.rgb = vec3(1.,1.,1.);// vPosition.xyz;
+		textureColor.b = 1.0 - textureColor.r;
+		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
     }
 </script>
-
-
 
 <script id="shader-vss" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec2 aTextureCoord;
+	attribute vec3 aVertexNormal;
 
 	uniform mat4 uMVMatrix;
 	uniform mat4 uPMatrix;
 	uniform mat3 uNMatrix;
 
-	uniform float gTime;
 	
 	varying vec2 vTextureCoord;
+	varying vec3 vTransformedNormal;
 	varying vec4 vPosition;
 	
     void main(void) 
 	{
+		vTransformedNormal = uNMatrix * aVertexNormal;
 
 		vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
-		
-		
-		//vPosition.y += sin(gTime) * 2.2;
 		
 		gl_Position = uPMatrix * vPosition;
 		vTextureCoord = aTextureCoord;

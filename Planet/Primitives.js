@@ -1,5 +1,22 @@
+function CreateQuad()
+{
+	var vertexPositions = [];
+	var vertexNormals = [];
+	var vertexTextureCoords = [];
+	
+	AddPoint([-0.5, 0.5, 0], [0, 1], [0.0, 0.0, 1],vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([0.5, 0.5, 0], [1, 1], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);	
+	AddPoint([0.5, -0.5, 0], [1, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
 
-//	SetModel([vertexPositions, vertexTextureCoords, vertexNormals], vertexPositions.length / 3, gameObject);
+	AddPoint([-0.5, 0.5, 0], [0, 1], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([0.5, -0.5, 0], [1, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);	
+	AddPoint([-0.5, -0.5, 0], [0, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
+	
+	var model = new Model(vertexPositions, vertexTextureCoords, vertexNormals);
+	return model;
+}
+
+
 
 function CreateShpere(resolution, radius)
 {
@@ -16,12 +33,12 @@ function CreateShpere(resolution, radius)
 		for(var x = 0; x < resolution - 1; x++)
 		{				
 			AddPointShpere(x, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x+1, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
 			AddPointShpere(x, y-1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
+			AddPointShpere(x+1, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
 			
 			AddPointShpere(x + 1, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x+1, y - 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
 			AddPointShpere(x, y - 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
+			AddPointShpere(x+1, y - 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
 		}
 	}
 	
@@ -54,5 +71,21 @@ function AddPointShpere(x, y, resolution, radius, vertexPositions, vertexNormals
 	
 	vertexTextureCoords.push(progressX);
 	vertexTextureCoords.push(progressY);
+}
+
+function AddPoint(_pos, _uv, _normal, vertexPositions, vertexNormals, vertexTextureCoords)
+{
+	vertexPositions.push(_pos[0]);
+	vertexPositions.push(_pos[1]);
+	vertexPositions.push(_pos[2]);
+	
+	var normal = vec3.create(_normal);
+	normal = vec3.normalize(normal);
+	vertexNormals.push(normal[0]);
+	vertexNormals.push(normal[1]);
+	vertexNormals.push(normal[2]);
+	
+	vertexTextureCoords.push(_uv[0]);
+	vertexTextureCoords.push(_uv[1]);
 }
 

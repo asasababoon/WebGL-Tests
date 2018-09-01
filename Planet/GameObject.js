@@ -67,7 +67,6 @@ function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _
 		this.Ready = true;
 	}
 		
-	_gameObjects.push(this);
 	return this;
 }
 
