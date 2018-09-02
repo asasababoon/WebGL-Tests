@@ -312,7 +312,7 @@ function LookAt(gameObject, target)
 	//rotationMatrix[13] = 0;
 	//rotationMatrix[14] = 0;
 	//rotationMatrix[15] = 1;
-	return mat4.multiply(gameObject.transform.Matrix, rotationMatrix);
+	return mat4.multiply(gameObject.transform.MatrixFull, rotationMatrix);
 	
 }
 
@@ -371,7 +371,7 @@ function MatrixesUp(gameObject)
 
 function GetTransformParent(gameObject, matrixList)
 {
-	matrixList[matrixList.length] = gameObject.transform.Matrix;
+	matrixList[matrixList.length] = gameObject.transform.MatrixFull;
 	
 	if(gameObject.transform.Gparent != null)
 	{

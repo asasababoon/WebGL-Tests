@@ -73,7 +73,7 @@
 
     function drawScene(seconds) 
 	{
-		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
+		//gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
 	//////
 	
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -92,12 +92,13 @@
 			DrawGameObject(_gameObjects[i], seconds);
 		}
 		
-		_gameObjects[0].RotateY();
-		_gameObjects[0].sayHi();
+		//_gameObjects[0].RotateY();
+		//_gameObjects[0].sayHi();
 		
 		
 		//////
 
+		/*
 		gl.bindTexture(gl.TEXTURE_2D, rttTexture);
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
@@ -109,7 +110,7 @@
 
 		DrawGameObjectRT(screenQuad);
 		screenQuad.RotateY();
-		
+		*/
 
     }
 
@@ -178,8 +179,101 @@
 		LoadModels();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
+		
+		canvas.onmousedown = handleMouseDown;
+		document.onmouseup = handleMouseUp;
+		document.onmousemove = handleMouseMove;
+
+	
         tick();
     }
+	
+	var mouseDown = false;
+	var lastMouseX = null;
+	var lastMouseY = null;
+
+	
+	function handleMouseDown(event) 
+	{
+		mouseDown = true;
+		lastMouseX = event.clientX;
+		lastMouseY = event.clientY;
+	}
+
+	function handleMouseUp(event) 
+	{
+		mouseDown = false;
+	}
+
+	
+	var newRotationMatrix = mat4.create();
+	mat4.identity(newRotationMatrix);
+	mat4.translate(newRotationMatrix, [0.0, 0.0, -160.0]);//planet.transform.position);
+	
+  function handleMouseMove(event) 
+  {
+	if (!mouseDown) {
+	  return;
+	}
+	var newX = event.clientX;
+	var newY = event.clientY;
+
+	var deltaX = newX - lastMouseX;
+	
+
+	
+	var tempRotX = mat4.create();
+	mat4.identity(tempRotX);
+	mat4.translate(tempRotX, [0.0, 1.0, 0.0]);
+	
+	var rotationX = mat4.create();
+	mat4.identity(rotationX);
+	rotationX = CopyMat4(planet.transform.MatrixRot);
+	mat4.inverse(rotationX);
+	
+	mat4.multiply(tempRotX, rotationX);
+	var posX = vec3.normalize([tempRotX[12], tempRotX[13], tempRotX[14]]);
+	
+	//tempRot = CopyMat4(planet.transform.MatrixFull);
+	//var axis = mat4.multiply(tempRot, [1, 0, 0]);
+	//var pos = vec3.normalize([planet.transform.MatrixFull[12], planet.transform.MatrixFull[13], planet.transform.MatrixFull[14]]);
+	//mat4.rotate(newRotationMatrix, DegToRad(deltaX / 10), );
+	
+	mat4.rotate(planet.transform.MatrixRot, DegToRad(deltaX / 10), [posX[0], posX[1], posX[2]]);
+
+	
+	
+	
+	var tempRotY = mat4.create();
+	mat4.identity(tempRotY);
+	mat4.translate(tempRotY, [1.0, 0.0, 0.0]);
+	
+	var rotationY = mat4.create();
+	mat4.identity(rotationY);
+	rotationY = CopyMat4(planet.transform.MatrixRot);
+	mat4.inverse(rotationY);
+	
+	mat4.multiply(tempRotY,rotationY);
+	var posY = vec3.normalize([tempRotY[12], tempRotY[13], tempRotY[14]]);
+	
+	
+	var deltaY = newY - lastMouseY;
+	//mat4.rotate(newRotationMatrix, DegToRad(deltaY / 10), [1, 0, 0]);
+	//mat4.rotate(newRotationMatrix, DegToRad(deltaY / 10), [posY[0], posY[1], posY[2]]);
+	mat4.rotate(planet.transform.MatrixRot, DegToRad(deltaY / 10), [posY[0], posY[1], posY[2]]);
+	
+	
+	
+	//planet.transform.MatrixFull = mat4.identity(planet.transform.MatrixFull);
+	//mat4.multiply(newRotationMatrix, planet.transform.MatrixRot, planet.transform.MatrixRot);
+	planet.CalculateFullTransform();
+
+	
+	
+	lastMouseX = newX
+	lastMouseY = newY;
+  }
+  
 	
 	var rttFramebuffer;
 	var rttTexture;
@@ -226,13 +320,15 @@
 		AddTexture(rttTexture, "rttTexture");
 	}
 	
+	
+	var planet;
 	function CreateGameObjects()
 	{
 	
 		//var planet = new Creation([0.0, -20.0, -160.0], [0, 0, 0.0], [1,1,1], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
 		//var planet = new Creation([0.0, 0.0, -600.0], [0, 0, 0.0], [0.1,0.1,0.1], "Models/Orange.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
 
-		var planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
+		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
 		_gameObjects.push(planet);
 
 		
@@ -251,7 +347,7 @@
 			var tree = new Creation([0, 0, 0.0], [0, 0, 0.0], [1, 1, 1], "Tree", "Tree", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
 			_gameObjects.push(tree);
 
-			mat4.rotateX(tree.transform.Matrix, DegToRad(-90));
+			mat4.rotateX(tree.transform.MatrixFull, DegToRad(-90));
 			LookAt(treeHolder, [pos[0] * 2, pos[1] * 2, pos[2]* 2]);
 			
 			tree.SetParent(treeHolder);

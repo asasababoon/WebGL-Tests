@@ -21,13 +21,23 @@ function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _
 	this.transform.scale = _scale;
 	this.transform.rotation = _rotation;
 	
-	this.transform.Matrix = mat4.create();
-	mat4.identity(this.transform.Matrix);
-	mat4.translate(this.transform.Matrix, this.transform.position);
-	mat4.rotateX(this.transform.Matrix, DegToRad(_rotation[0]));
-	mat4.rotateY(this.transform.Matrix, DegToRad(_rotation[1]));
-	mat4.rotateZ(this.transform.Matrix, DegToRad(_rotation[2]));
-	mat4.scale(this.transform.Matrix, this.transform.scale);
+	this.transform.MatrixPos = mat4.create();
+	this.transform.MatrixRot = mat4.create();
+	this.transform.MatrixScale = mat4.create();
+	this.transform.MatrixFull = mat4.create();
+	
+	mat4.identity(this.transform.MatrixPos);
+	mat4.identity(this.transform.MatrixRot);
+	mat4.identity(this.transform.MatrixScale);
+	mat4.identity(this.transform.MatrixFull);
+
+	mat4.translate(this.transform.MatrixPos, this.transform.position);
+	mat4.rotateX(this.transform.MatrixRot, DegToRad(_rotation[0]));
+	mat4.rotateY(this.transform.MatrixRot, DegToRad(_rotation[1]));
+	mat4.rotateZ(this.transform.MatrixRot, DegToRad(_rotation[2]));
+	mat4.scale(this.transform.MatrixScale, this.transform.scale);
+	
+	this.CalculateFullTransform();
 	
 	this.transform.Gparent = null;
 	this.transform.Gchilds = [];
@@ -114,6 +124,15 @@ Creation.prototype.RemoveChild = function(_gChild)
 			this.transform.Gchilds.splice(i, 1);
 	}
 }
+
+Creation.prototype.CalculateFullTransform = function()
+{
+	mat4.identity(this.transform.MatrixFull);
+	mat4.multiply(this.transform.MatrixFull, this.transform.MatrixPos);
+	mat4.multiply(this.transform.MatrixFull, this.transform.MatrixRot);
+	mat4.multiply(this.transform.MatrixFull, this.transform.MatrixScale);
+}
+
 
 function SetGraphics(_gameObject, _modelData, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes)
 {
