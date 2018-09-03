@@ -58,10 +58,13 @@ function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _
 		this.mesh.dataTypes.requireUVs = true;
 		this.mesh.dataTypes.requireNormals = false;
 
-		for(let i =0; i < _vertexDataTypes.length; i++)
+		if(_vertexDataTypes != null)
 		{
-			if(_vertexDataTypes[i] == 'vn')
-				this.mesh.dataTypes.requireNormals = true;
+			for(let i =0; i < _vertexDataTypes.length; i++)
+			{
+				if(_vertexDataTypes[i] == 'vn')
+					this.mesh.dataTypes.requireNormals = true;
+			}
 		}
 
 		this.material.uniforms = ["Ambient", "LightPos", "LightCol"];
@@ -98,7 +101,8 @@ Creation.prototype.sayHi = function() {
 
 Creation.prototype.RotateY = function()
 {
-	mat4.rotateY(this.transform.Matrix, timeDelta * 0.4);
+	mat4.rotateY(this.transform.MatrixRot, timeDelta * 0.4);
+	this.CalculateFullTransform();
 }
 
 Creation.prototype.SetParent = function(_gParent)

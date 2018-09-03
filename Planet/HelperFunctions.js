@@ -90,7 +90,10 @@ function DrawGameObjectRT(gameObject)
 				uniformsArray[gameObject.material.uniforms[i]][1],
 				uniformsArray[gameObject.material.uniforms[i]][2]
 				);
-		}	
+		}
+
+		gl.uniform1f(gameObject.material.shaderProgram.time, timePassed);
+		
 			  	
 		if(gameObject.mesh.dataTypes.requireVPos)
 		{

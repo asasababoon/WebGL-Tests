@@ -17,6 +17,24 @@ function CreateQuad()
 }
 
 
+function CreateQuadScreen()
+{
+	var vertexPositions = [];
+	var vertexNormals = [];
+	var vertexTextureCoords = [];
+	
+	AddPoint([-1, 1, 0], [0, 1], [0.0, 0.0, 1],vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([1, 1, 0], [1, 1], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);	
+	AddPoint([1, -1, 0], [1, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
+
+	AddPoint([-1, 1, 0], [0, 1], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([1, -1, 0], [1, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);	
+	AddPoint([-1, -1, 0], [0, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
+	
+	var model = new Model(vertexPositions, vertexTextureCoords, vertexNormals);
+	return model;
+}
+
 
 function CreateShpere(resolution, radius)
 {
