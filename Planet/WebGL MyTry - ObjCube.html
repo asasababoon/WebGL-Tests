@@ -76,7 +76,7 @@
 		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebufferWave);
 	//////
 	
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.viewport(0, 0,rttFramebufferWave.width, rttFramebufferWave.height);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
 		gl.enable(gl.DEPTH_TEST);
@@ -103,34 +103,31 @@
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 		
-		//gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebufferInvert);
 		
 		
 		gl.disable(gl.DEPTH_TEST);
 		
 		// draw to quad
-		  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+		gl.viewport(0, 0, rttFramebufferInvert.width, rttFramebufferInvert.height);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		DrawGameObjectRT(screenQuadWave);
 		
-		
-		
+	
 		gl.bindTexture(gl.TEXTURE_2D, rttTextureInvert);
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 		
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);//rttFramebufferGradient);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebufferWave);
 
 		// draw to quad
-		 gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+		gl.viewport(0, 0, rttFramebufferWave.width, rttFramebufferWave.height);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		DrawGameObjectRT(screenQuadInvert);
 		
 		
 		
-/*		
-		gl.bindTexture(gl.TEXTURE_2D, rttTextureGradient);
+		gl.bindTexture(gl.TEXTURE_2D, rttTextureWave);
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 		
@@ -140,7 +137,6 @@
 		  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		DrawGameObjectRT(screenQuadGradient);
-	*/	
     }
 
 
@@ -219,9 +215,9 @@
 		rttFramebufferGradient = gl.createFramebuffer();
 		rttTextureGradient = gl.createTexture();
 		
-		initTextureFramebuffer(rttFramebufferWave, rttTextureWave);
-		initTextureFramebuffer(rttFramebufferInvert, rttTextureInvert);
-		initTextureFramebuffer(rttFramebufferGradient, rttTextureGradient);
+		initTextureFramebuffer(rttFramebufferWave, rttTextureWave, 512, 512);
+		initTextureFramebuffer(rttFramebufferInvert, rttTextureInvert, 512, 512);
+		initTextureFramebuffer(rttFramebufferGradient, rttTextureGradient, 512, 512);
 	
 		SetupModels();		
 		SetupTextures();
@@ -229,12 +225,12 @@
 		
 		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTextureWave", 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', null);
 		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTextureInvert", 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
-		screenQuadGradient = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTextureGradient", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null);
+		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTextureWave", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null);
 
 		//Invert
 		LoadModels();
 
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clearColor(1.0, 0.0, 0.0, 1.0);
 		
 		canvas.onmousedown = handleMouseDown;
 		document.onmouseup = handleMouseUp;
@@ -332,17 +328,22 @@
   
 
 
-	function initTextureFramebuffer(buffer, texture) 
+	function initTextureFramebuffer(buffer, texture, width, height) 
 	{
 		//buffer = gl.createFramebuffer();
 		gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
-		buffer.width = 512;
-		buffer.height = 512;
+		buffer.width = width;
+		buffer.height = height;
 		
 		//texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, texture);
+		
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+
+//		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+//		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
 		gl.generateMipmap(gl.TEXTURE_2D);
 		
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, buffer.width, buffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
@@ -565,11 +566,10 @@
 	uniform sampler2D uSampler;
     void main(void) 
 	{
-		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
-		uv.y += sin(uv.x * 8.0 + gTime * 3.0) * 0.1;
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);// * 0.9;// * (.99) + (.5/512.);;
+		uv.y += sin(uv.x * 8.0 + gTime * 3.0) * 0.01;
 		
         vec4 textureColor = texture2D(uSampler, uv);
-		textureColor.g = 0.25;
 		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
     }
 </script>
@@ -589,11 +589,12 @@
 	uniform sampler2D uSampler;
     void main(void) 
 	{
-		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);// * (.98)  + (.5/512.);
         vec4 textureColor = texture2D(uSampler, uv);
 		textureColor.r = 1.0 - textureColor.r;
 		textureColor.g = 1.0 - textureColor.g;
 		textureColor.b = 1.0 - textureColor.b;
+		
 		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
     }
 </script>
@@ -613,9 +614,9 @@
 	uniform sampler2D uSampler;
     void main(void) 
 	{
-		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);// * (.99)  + (.5/512.);
         vec4 textureColor = texture2D(uSampler, uv);
-		textureColor.rgb *= 1.0 -uv.x;
+		textureColor.rgb *= uv.x;
 		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
     }
 </script>

@@ -4,7 +4,7 @@ function CreateQuad()
 	var vertexNormals = [];
 	var vertexTextureCoords = [];
 	
-	AddPoint([-0.5, 0.5, 0], [0, 1], [0.0, 0.0, 1],vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([-0.5, 0.5, 0], [0, 1.0], [0.0, 0.0, 1],vertexPositions, vertexNormals, vertexTextureCoords);
 	AddPoint([0.5, 0.5, 0], [1, 1], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);	
 	AddPoint([0.5, -0.5, 0], [1, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
 
@@ -23,13 +23,13 @@ function CreateQuadScreen()
 	var vertexNormals = [];
 	var vertexTextureCoords = [];
 	
-	AddPoint([-1, 1, 0], [0, 1], [0.0, 0.0, 1],vertexPositions, vertexNormals, vertexTextureCoords);
-	AddPoint([1, 1, 0], [1, 1], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);	
-	AddPoint([1, -1, 0], [1, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([-1.0, 1.0, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0],vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([1.0, 1.0, 0.0], [1.0, 1.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);	
+	AddPoint([1.0, -1.0, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);
 
-	AddPoint([-1, 1, 0], [0, 1], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
-	AddPoint([1, -1, 0], [1, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);	
-	AddPoint([-1, -1, 0], [0, 0], [0.0, 0.0, 1], vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([-1.0, 1.0, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([1.0, -1.0, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);	
+	AddPoint([-1.0, -1.0, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);
 	
 	var model = new Model(vertexPositions, vertexTextureCoords, vertexNormals);
 	return model;
