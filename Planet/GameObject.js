@@ -3,7 +3,7 @@ function NullCreation(_position, _rotation, _scale)
 	return Creation(_position, _rotation, _scale, "Empty", null, null, null, null)
 }
 
-function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _shaderVertex, _shaderFragment, _vertexDataTypes)
+function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _shaderFragment, _shaderVertex, _vertexDataTypes, _extraUniformsF3, _extraUniformsF1)
 {
 	this.name= _name;
 	this.mesh= [];//= Object
@@ -66,14 +66,10 @@ function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _
 					this.mesh.dataTypes.requireNormals = true;
 			}
 		}
-
-		this.material.uniforms = ["Ambient", "LightPos", "LightCol"];
 		
 		this.material.shaderVertex = _shaderVertex;
 		this.material.shaderFragment = _shaderFragment;
-		this.material.shaderProgram = initShaders(this);
-		
-		//LoadModelG(this, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
+		this.material.shaderProgram = initShaders(this, _extraUniformsF3, _extraUniformsF1);	
 	}
 	else
 	{
@@ -93,10 +89,9 @@ Creation.prototype.AddTexture = function(_texture)
 	this.material.textures.MainTexture = _texture;
 }
 
-Creation.prototype.sayHi = function() {
+Creation.prototype.sayHi = function() 
+{
   console.log(this.name + " Says HI");
- // this.transform.rotation[1] = timePassed * 45;
-  //this.transform.rotation[2] = timePassed * 9;
 }
 
 Creation.prototype.RotateY = function()
@@ -138,42 +133,15 @@ Creation.prototype.CalculateFullTransform = function()
 }
 
 
-function SetGraphics(_gameObject, _modelData, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes)
-{
-	SetModel(LoadModelDirect(_modelData), gameObject);
-
-	LoadTexture(_textureData, _gameObject);
-	
-	_gameObject.material.shaderVertex = _shaderVertex;
-	_gameObject.material.shaderFragment = _shaderFragment;
-	_gameObject.material.shaderProgram = initShaders(_gameObject);
-	
-	_gameObject.mesh.loaded = true;
-}
 
 
-function LoadModelG(_gameObject, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes) 
-{
-	var request = new XMLHttpRequest();
-	request.open("GET", _gameObject.name);
-	request.onreadystatechange = function () {
-		if (request.readyState == 4) {
-			
-			SetGraphics(_gameObject, request.responseText, _textureData, _shaderVertex, _shaderFragment, _vertexDataTypes);
-		}
-	}
-	request.send();
-}
-
-
-
-   function initShaders(gameObject) 
+   function initShaders(gameObject, _extraUniformsF3, _extraUniformsF1) 
    {		
         var fragmentShader = getShader(gl, gameObject.material.shaderFragment);
         var vertexShader = getShader(gl, gameObject.material.shaderVertex);
         var  shaderProgram = gl.createProgram(); // a WEBGL Program, its holds the vertex + fragmnet shader
+		gl.attachShader(shaderProgram, fragmentShader);
         gl.attachShader(shaderProgram, vertexShader);
-        gl.attachShader(shaderProgram, fragmentShader);
         gl.linkProgram(shaderProgram);
         if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
             alert("Could not initialise shaders");
@@ -207,22 +175,55 @@ function LoadModelG(_gameObject, _textureData, _shaderVertex, _shaderFragment, _
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 		shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
         shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
-		shaderProgram.time = gl.getUniformLocation(shaderProgram, "gTime");
-		shaderProgram.time2 = gl.getUniformLocation(shaderProgram, "gTime2");
 
-		shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-        shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
-        shaderProgram.pointLightingColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingColor");
 		
-		shaderProgram.uniforms = [];
-		shaderProgram.uniforms[0] = shaderProgram.ambientColorUniform;
-		shaderProgram.uniforms[1] = shaderProgram.pointLightingLocationUniform;
-		shaderProgram.uniforms[2] = shaderProgram.pointLightingColorUniform;
+		shaderProgram.uniformsF3 = [];
+		AddUniform(shaderProgram.uniformsF3, "Ambient", gl.getUniformLocation(shaderProgram, "uAmbientColor"));
+		AddUniform(shaderProgram.uniformsF3, "LightPos", gl.getUniformLocation(shaderProgram, "uPointLightingLocation"));
+		AddUniform(shaderProgram.uniformsF3, "LightCol", gl.getUniformLocation(shaderProgram, "uPointLightingColor"));
+		if(_extraUniformsF3 != null)
+		{
+			for(var i =0; i < _extraUniformsF3.length; i++)
+			{
+				AddUniform(shaderProgram.uniformsF3, _extraUniformsF3[i], gl.getUniformLocation(shaderProgram, _extraUniformsF3[i]));
+			}
+		}
+		
+		
+		shaderProgram.uniformsF1 = [];
+		AddUniform(shaderProgram.uniformsF1, "gTime", gl.getUniformLocation(shaderProgram, "gTime"));
+		AddUniform(shaderProgram.uniformsF1, "gTime", gl.getUniformLocation(shaderProgram, "gTime2"));
+		if(_extraUniformsF1 != null)
+		{
+			for(var i =0; i < _extraUniformsF1.length; i++)
+			{
+				console.log("uniform name:" +  _extraUniformsF1[i]);
+				AddUniform(shaderProgram.uniformsF1, _extraUniformsF1[i], gl.getUniformLocation(shaderProgram, _extraUniformsF1[i]));
+			}
+		}
 		
 		return shaderProgram;
     }
 	
+function AddUniform(_array, _name, _location) 
+{
+	var bla = [];
+	bla.uName = _name;
+	bla.uLocation = _location;
+	_array.push(bla);
+	
+}
+	
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 
  

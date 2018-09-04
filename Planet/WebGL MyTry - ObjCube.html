@@ -31,11 +31,14 @@
 	var screenQuadInvert;
 	var screenQuadGradient;
 		
+	var rttFrameBuffers = [];
+	var rttFrameTextures = [];
+	
 	var rttFramebuffer1;
-	var rttTexture1;
+	var rttTexture0;
 
 	var rttFramebuffer2;
-	var rttTexture2;
+	var rttTexture1;
 	
   function initGL(canvas) {
         try {
@@ -81,13 +84,32 @@
     }
 	
 
+	
+	function PrepareRenderToBuffer(buffer)
+	{
+		gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+		gl.viewport(0, 0, buffer.width, buffer.height);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	}
+	
+	function FinishRenderToBuffer(texture)
+	{
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+	}
+	
+	function PrepareRenderToScreen()
+	{
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+		 gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	}
+	
     function drawScene(seconds) 
 	{
-		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer1);
-	//////
-	
-        gl.viewport(0, 0,rttFramebuffer1.width, rttFramebuffer1.height);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		PrepareRenderToBuffer(rttFrameBuffers[0]);
+		//PrepareRenderToScreen();
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
 		gl.enable(gl.DEPTH_TEST);
 		//gl.enable(gl.CULL_FACE);
@@ -96,57 +118,34 @@
 		uniformsArray["Ambient"] = [parseFloat(document.getElementById("ambientR").value), parseFloat(document.getElementById("ambientG").value), parseFloat(document.getElementById("ambientB").value)];
 		uniformsArray["LightPos"] = [parseFloat(document.getElementById("lightPositionX").value), parseFloat(document.getElementById("lightPositionY").value), parseFloat(document.getElementById("lightPositionZ").value)];
 		uniformsArray["LightCol"] = [parseFloat(document.getElementById("pointR").value), parseFloat(document.getElementById("pointG").value), parseFloat(document.getElementById("pointB").value)];
+		uniformsArray["gTime"] = timePassed;
+		uniformsArray["gTime2"] = timePassed;
 			
 		for(let i =0; i < _gameObjects.length; i++)
 		{			
 			DrawGameObject(_gameObjects[i], seconds);
 		}
 		
-		//_gameObjects[0].RotateY();
-		//_gameObjects[0].sayHi();
-		
-		
-		//////
-
-		
-		gl.bindTexture(gl.TEXTURE_2D, rttTexture1);
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-		
-		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer2);
-		
-		
-		gl.disable(gl.DEPTH_TEST);
-		
-		// draw to quad
-		gl.viewport(0, 0, rttFramebuffer2.width, rttFramebuffer2.height);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		DrawGameObjectRT(screenQuadWave);
-		
 	
-		gl.bindTexture(gl.TEXTURE_2D, rttTexture2);
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, null);
+		FinishRenderToBuffer(rttFrameTextures[0]);
 		
-		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer1);
+		
+		PrepareRenderToBuffer(rttFrameBuffers[1]);
+		//PrepareRenderToScreen();
 
-		// draw to quad
-		gl.viewport(0, 0, rttFramebuffer1.width, rttFramebuffer1.height);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		DrawGameObjectRT(screenQuadInvert);
+		gl.disable(gl.DEPTH_TEST);
+		DrawGameObject(screenQuadWave);
+		FinishRenderToBuffer(rttFrameTextures[1]);
 		
 		
+		PrepareRenderToBuffer(rttFrameBuffers[0]);
+		DrawGameObject(screenQuadInvert);
+		FinishRenderToBuffer(rttFrameTextures[0]);
 		
-		gl.bindTexture(gl.TEXTURE_2D, rttTexture1);
-        gl.generateMipmap(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, null);
 		
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-		// draw to quad
-		  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		DrawGameObjectRT(screenQuadGradient);
+		PrepareRenderToScreen();
+		DrawGameObject(screenQuadGradient);
+		//*/
     }
 
 
@@ -202,32 +201,33 @@
 	}
 	
 	
+	
     function webGLStart() 
 	{
         var canvas = document.getElementById("glenns-canvas");
         initGL(canvas);
-		rttFramebuffer1 = gl.createFramebuffer();
-		rttTexture1 = gl.createTexture();
-		rttFramebuffer2 = gl.createFramebuffer();
-		rttTexture2 = gl.createTexture();
-		rttFramebufferGradient = gl.createFramebuffer();
-		rttTextureGradient = gl.createTexture();
+		rttFrameBuffers.push(gl.createFramebuffer());
+		rttFrameBuffers.push(gl.createFramebuffer());
 		
-		initTextureFramebuffer(rttFramebuffer1, rttTexture1, 512, 512);
-		initTextureFramebuffer(rttFramebuffer2, rttTexture2, 512, 512);
+		rttFrameTextures.push(gl.createTexture());
+		rttFrameTextures.push(gl.createTexture());
+		
+		initTextureFramebuffer(rttFrameBuffers[0], rttFrameTextures[0], 512, 512);
+		initTextureFramebuffer(rttFrameBuffers[1], rttFrameTextures[1], 512, 512);
 	
 		SetupModels();		
 		SetupTextures();
 		CreateGameObjects();
 		
-		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture1", 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', null);
-		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture2", 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
-		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture1", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null);
+		uniformsArray["gKaas"] = 1.0;
+		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture0", 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', null);
+		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture1", 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
+		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture0", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null, null, ["gKaas"]);
 
 		//Invert
 		LoadModels();
 
-        gl.clearColor(1.0, 0.0, 0.0, 1.0);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		
 		canvas.onmousedown = handleMouseDown;
 		document.onmouseup = handleMouseUp;
@@ -369,8 +369,8 @@
 	function SetupTextures()
 	{
 		PrepareLoadTexture("Textures/Apple/appleD.jpg", "Apple_Albedo");
-		AddTexture(rttTexture1, "rttTexture1");
-		AddTexture(rttTexture2, "rttTexture2");
+		AddTexture(rttFrameTextures[0], "rttTexture0");
+		AddTexture(rttFrameTextures[1], "rttTexture1");
 	}
 	
 	
@@ -610,7 +610,8 @@
 	varying vec4 vPosition;
 
 	uniform float gTime;
-		
+	uniform float gKaas;
+	
 	uniform vec3 uAmbientColor;
 	uniform vec3 uPointLightingLocation;
 	uniform vec3 uPointLightingColor;
@@ -621,6 +622,7 @@
 		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);// * (.99)  + (.5/512.);
         vec4 textureColor = texture2D(uSampler, uv);
 		textureColor.rgb *= uv.x;
+		textureColor.rgb *= gKaas;
 		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
     }
 </script>

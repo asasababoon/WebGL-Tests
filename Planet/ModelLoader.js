@@ -140,8 +140,6 @@ function SetModel(_model, gameObject)
 		
 	if(gameObject.mesh.dataTypes.requireVPos)
 	{
-		console.log('hey A');
-		//vertexes
 		cubeVertexPositionBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexPositions), gl.STATIC_DRAW);
@@ -152,8 +150,7 @@ function SetModel(_model, gameObject)
 	
 	if(gameObject.mesh.dataTypes.requireUVs)
 	{
-		console.log('hey B');
-		//uvs
+
 		cubeVertexTextureCoordBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexTextureCoords), gl.STATIC_DRAW);
@@ -164,8 +161,6 @@ function SetModel(_model, gameObject)
 	
 	if(gameObject.mesh.dataTypes.requireNormals)
 	{
-		console.log('hey C');
-		// normals
 		cubeVertexNormalBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexNormalBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexNormals), gl.STATIC_DRAW);

@@ -6,21 +6,25 @@ function DrawGameObject(gameObject, seconds)
 	//console.log("draw gameObject " + gameObject.name);
 	if(gameObject.NullObject == false)
 	{
+		var value;
 		gl.useProgram(gameObject.material.shaderProgram);		
-		for(let i =0; i < gameObject.material.uniforms.length; i++)
+		for(let i =0; i < gameObject.material.shaderProgram.uniformsF3.length; i++)
 		{
-			gl.uniform3f(
-				gameObject.material.shaderProgram.uniforms[i],
-				uniformsArray[gameObject.material.uniforms[i]][0],
-				uniformsArray[gameObject.material.uniforms[i]][1],
-				uniformsArray[gameObject.material.uniforms[i]][2]
-				);
+			var value = uniformsArray[gameObject.material.shaderProgram.uniformsF3[i].uName];
+			gl.uniform3f(gameObject.material.shaderProgram.uniformsF3[i].uLocation, value[0], value[1], value[2]);
+		}	
+		
+		for(let i =0; i < gameObject.material.shaderProgram.uniformsF1.length; i++)
+		{			
+			var value = uniformsArray[gameObject.material.shaderProgram.uniformsF1[i].uName];
+			gl.uniform1f(gameObject.material.shaderProgram.uniformsF1[i].uLocation, value);
 		}	
 			  
-		gl.uniform1f(gameObject.material.shaderProgram.time, timePassed);
-		gl.uniform1f(gameObject.material.shaderProgram.time2, timePassed);
+		//gl.uniform1f(gameObject.material.shaderProgram.time, timePassed);
+		//gl.uniform1f(gameObject.material.shaderProgram.time2, timePassed);
 
 
+		
 		// bind the array with values to WEBGL	
 		//
 		// send data to the correct shaderprogram + which attribute, which was bound to a shader attribute earlier
@@ -75,64 +79,6 @@ function DrawGameObject(gameObject, seconds)
 		gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
 	}
 	
-}
-
-function DrawGameObjectRT(gameObject)
-{
-	if(gameObject.NullObject == false)
-	{
-		gl.useProgram(gameObject.material.shaderProgram);		
-		for(let i =0; i < gameObject.material.uniforms.length; i++)
-		{
-			gl.uniform3f(
-				gameObject.material.shaderProgram.uniforms[i],
-				uniformsArray[gameObject.material.uniforms[i]][0],
-				uniformsArray[gameObject.material.uniforms[i]][1],
-				uniformsArray[gameObject.material.uniforms[i]][2]
-				);
-		}
-
-		gl.uniform1f(gameObject.material.shaderProgram.time, timePassed);
-		
-			  	
-		if(gameObject.mesh.dataTypes.requireVPos)
-		{
-
-			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexPositionBuffer);
-			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexPositionAttribute, gameObject.mesh.cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		}
-		if(gameObject.mesh.dataTypes.requireUVs)
-		{
-			
-			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexTextureCoordBuffer);
-			gl.vertexAttribPointer(gameObject.material.shaderProgram.textureCoordAttribute, gameObject.mesh.cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		}
-		if(gameObject.mesh.dataTypes.requireNormals)
-		{
-			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexNormalBuffer);
-			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexNormalAttribute, gameObject.mesh.cubeVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-		}
-		
-
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textures.MainTexture);		
-		gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
-	}
-	
-	let transform = mat4.create();
-	mat4.identity(transform);
-
-	let MatrixList = MatrixesUp(gameObject);
-	for (let i = MatrixList.length - 1; i > -1; i--)
-	{
-		mat4.multiply(transform, MatrixList[i]);
-	}
-	
-	if(gameObject.NullObject == false)
-	{
-		setMatrixUniforms(gameObject, transform);
-		gl.drawArrays(gl.TRIANGLES, 0, gameObject.mesh.totalVertexCount);
-	}
 }
 
 
