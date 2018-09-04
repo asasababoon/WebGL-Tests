@@ -27,6 +27,16 @@
 	var uniformsArray = {};
 	
 	
+	var screenQuadWave;
+	var screenQuadInvert;
+	var screenQuadGradient;
+		
+	var rttFramebuffer1;
+	var rttTexture1;
+
+	var rttFramebuffer2;
+	var rttTexture2;
+	
   function initGL(canvas) {
         try {
             gl = canvas.getContext("experimental-webgl");
@@ -73,10 +83,10 @@
 
     function drawScene(seconds) 
 	{
-		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebufferWave);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer1);
 	//////
 	
-        gl.viewport(0, 0,rttFramebufferWave.width, rttFramebufferWave.height);
+        gl.viewport(0, 0,rttFramebuffer1.width, rttFramebuffer1.height);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
 		gl.enable(gl.DEPTH_TEST);
@@ -99,35 +109,35 @@
 		//////
 
 		
-		gl.bindTexture(gl.TEXTURE_2D, rttTextureWave);
+		gl.bindTexture(gl.TEXTURE_2D, rttTexture1);
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 		
-		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebufferInvert);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer2);
 		
 		
 		gl.disable(gl.DEPTH_TEST);
 		
 		// draw to quad
-		gl.viewport(0, 0, rttFramebufferInvert.width, rttFramebufferInvert.height);
+		gl.viewport(0, 0, rttFramebuffer2.width, rttFramebuffer2.height);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		DrawGameObjectRT(screenQuadWave);
 		
 	
-		gl.bindTexture(gl.TEXTURE_2D, rttTextureInvert);
+		gl.bindTexture(gl.TEXTURE_2D, rttTexture2);
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 		
-		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebufferWave);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer1);
 
 		// draw to quad
-		gl.viewport(0, 0, rttFramebufferWave.width, rttFramebufferWave.height);
+		gl.viewport(0, 0, rttFramebuffer1.width, rttFramebuffer1.height);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		DrawGameObjectRT(screenQuadInvert);
 		
 		
 		
-		gl.bindTexture(gl.TEXTURE_2D, rttTextureWave);
+		gl.bindTexture(gl.TEXTURE_2D, rttTexture1);
         gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 		
@@ -191,41 +201,28 @@
 		if(textureTag)_gameObject.AddTexture(texturesReady[textureTag]);
 	}
 	
-	var screenQuadWave;
-	var screenQuadInvert;
-	var screenQuadGradient;
-		
-	var rttFramebufferWave;
-	var rttTextureWave;
-
-	var rttFramebufferInvert;
-	var rttTextureInvert;
-	
-	var rttFramebufferGradient;
-	var rttTextureGradient;
 	
     function webGLStart() 
 	{
         var canvas = document.getElementById("glenns-canvas");
         initGL(canvas);
-		rttFramebufferWave = gl.createFramebuffer();
-		rttTextureWave = gl.createTexture();
-		rttFramebufferInvert = gl.createFramebuffer();
-		rttTextureInvert = gl.createTexture();
+		rttFramebuffer1 = gl.createFramebuffer();
+		rttTexture1 = gl.createTexture();
+		rttFramebuffer2 = gl.createFramebuffer();
+		rttTexture2 = gl.createTexture();
 		rttFramebufferGradient = gl.createFramebuffer();
 		rttTextureGradient = gl.createTexture();
 		
-		initTextureFramebuffer(rttFramebufferWave, rttTextureWave, 512, 512);
-		initTextureFramebuffer(rttFramebufferInvert, rttTextureInvert, 512, 512);
-		initTextureFramebuffer(rttFramebufferGradient, rttTextureGradient, 512, 512);
+		initTextureFramebuffer(rttFramebuffer1, rttTexture1, 512, 512);
+		initTextureFramebuffer(rttFramebuffer2, rttTexture2, 512, 512);
 	
 		SetupModels();		
 		SetupTextures();
 		CreateGameObjects();
 		
-		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTextureWave", 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', null);
-		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTextureInvert", 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
-		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTextureWave", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null);
+		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture1", 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', null);
+		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture2", 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
+		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture1", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null);
 
 		//Invert
 		LoadModels();
@@ -363,7 +360,7 @@
 	
 	function SetupModels()
 	{	
-		AddModel(CreateShpere(19, 10), "Sphere");
+		AddModel(CreateShpere(20, 10), "Sphere");
 		AddModel(CreateQuadScreen(), "Quad");
 		PrepareLoadModel("Models/Lowpoly_tree_sample.obj", "Tree");
 		PrepareLoadModel("Models/glenn_monkey.obj", "Monkey");
@@ -372,31 +369,22 @@
 	function SetupTextures()
 	{
 		PrepareLoadTexture("Textures/Apple/appleD.jpg", "Apple_Albedo");
-		AddTexture(rttTextureWave, "rttTextureWave");
-		AddTexture(rttTextureInvert, "rttTextureInvert");
-		AddTexture(rttTextureGradient, "rttTextureGradient");
+		AddTexture(rttTexture1, "rttTexture1");
+		AddTexture(rttTexture2, "rttTexture2");
 	}
 	
 	
 	var planet;
 	function CreateGameObjects()
 	{
-	
-		//var planet = new Creation([0.0, -20.0, -160.0], [0, 0, 0.0], [1,1,1], "Models/apple textured obj.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
-		//var planet = new Creation([0.0, 0.0, -600.0], [0, 0, 0.0], [0.1,0.1,0.1], "Models/Orange.obj", "Textures/Apple/appleD.jpg", 'shader-fs', 'shader-vs', ['vn']);
-
 		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
 		_gameObjects.push(planet);
-
-		
+	
 		var radius = 10;
 		for(var i =0; i< 10; i++)
 		{
 			let pos = vec3.scale(GetRandomVec3Normalized(), radius);
-			//[pos[0], pos[1], pos[2]]
-			console.log("POS LENGTH " + vec3.length(pos));
-			console.log("POS LENGTH " + vec3.str(pos));
-			
+
 			var scaleFactor = 1.0;
 			var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1 * scaleFactor, 1 * scaleFactor, 1 * scaleFactor], "TreeHolder", null, null, null, null, null);
 			_gameObjects.push(treeHolder);
@@ -410,12 +398,28 @@
 			tree.SetParent(treeHolder);
 			treeHolder.SetParent(planet);
 		}
-	
 	}
 	
 
 	
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -467,7 +471,7 @@
 		power = abs(power);
 		power = 1.0 - power;
 		
-		vec4 extra = vec4(1.0, 0.0, 0.0, 1.0) * power;
+		vec4 extra = vec4(0.0, 1.0, 0.0, 1.0) * power;
 		gl_FragColor = vec4(textureColor.rgb * lightWeighting, textureColor.a) + extra;
     }
 </script>

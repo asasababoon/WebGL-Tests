@@ -38,6 +38,8 @@ function CreateQuadScreen()
 
 function CreateShpere(resolution, radius)
 {
+	resolution = resolution + 1;
+	
 	var vertexPositions = [];
 	var vertexNormals = [];
 	var vertexTextureCoords = [];
@@ -51,12 +53,12 @@ function CreateShpere(resolution, radius)
 		for(var x = 0; x < resolution - 1; x++)
 		{				
 			AddPointShpere(x, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x, y-1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
+			AddPointShpere(x, y+1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
 			AddPointShpere(x+1, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
 			
 			AddPointShpere(x + 1, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x, y - 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x+1, y - 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
+			AddPointShpere(x, y + 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
+			AddPointShpere(x+1, y + 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
 		}
 	}
 	
@@ -67,13 +69,13 @@ function CreateShpere(resolution, radius)
 
 function AddPointShpere(x, y, resolution, radius, vertexPositions, vertexNormals, vertexTextureCoords)
 {
-	var progressX = (x%resolution) / (resolution - 1);
-	var progressY = (y%resolution) / (resolution - 1);
+	var progressX = x / (resolution - 1);
+	var progressY = y / (resolution - 1);
 	var progressXRadians = progressX * Math.PI;
 	var progressYRadians = progressY * Math.PI;
 			
 	var posX = Math.cos(progressXRadians * 2) * Math.sin(progressYRadians) * radius;
-	var posY = Math.cos(progressYRadians) * radius;
+	var posY = -Math.cos(progressYRadians) * radius;
 	var posZ = Math.sin(progressXRadians * 2) * Math.sin(progressYRadians) * radius;
 	
 	
