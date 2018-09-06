@@ -42,6 +42,7 @@
 	var rttFramebuffer2;
 	var rttTexture1;
 	
+	
   function initGL(canvas) {
         try {
             gl = canvas.getContext("experimental-webgl");
@@ -97,7 +98,7 @@
 	function FinishRenderToBuffer(texture)
 	{
 		gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.generateMipmap(gl.TEXTURE_2D);
+        //gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 	
@@ -219,12 +220,14 @@
 	}
 	
 	
-	
+var ext;
+		
     function webGLStart() 
 	{
         var canvas = document.getElementById("glenns-canvas");
         initGL(canvas);
-
+		ext = gl.getExtension('OES_texture_float');
+	
 		SetupRenderTextures();
 		SetupModels();		
 		SetupTextures();
@@ -259,7 +262,8 @@
 		rttFrameTextures.push(gl.createTexture());
 		
 		var rttSettings = []; rttSettings.width = 512; rttSettings.height = 512; 
-		rttSettings.textureFormat = gl.UNSIGNED_BYTE; rttSettings.filter = null;
+		rttSettings.textureFormat = gl.UNSIGNED_BYTE; 
+		rttSettings.filter = null;
 		rttSettings.internalFormat = gl.RGBA;
 
 		initTextureFramebuffer(rttFrameBuffers[0], rttFrameTextures[0], rttSettings);
@@ -272,9 +276,12 @@
 		rttFrameTextures.push(gl.createTexture());
 		rttFrameTextures.push(gl.createTexture());
 		
-		//rttSettings = []; rttSettings.width = 512; rttSettings.height = 512; 
-		//rttSettings.textureFormat = gl.GL_FLOAT; rttSettings.filter = gl.NEAREST;
-		//rttSettings.internalFormat = gl.GL_RGBA32F;
+		rttSettings = []; 
+		rttSettings.width = 512; 
+		rttSettings.height = 512; 
+		rttSettings.textureFormat = gl.FLOAT; 
+		rttSettings.filter = gl.NEAREST;
+		rttSettings.internalFormat = gl.RGBA;//32F;
 		
 		initTextureFramebuffer(rttFrameBuffers[2], rttFrameTextures[2], rttSettings);
 		initTextureFramebuffer(rttFrameBuffers[3], rttFrameTextures[3], rttSettings);
