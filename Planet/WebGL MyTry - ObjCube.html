@@ -133,30 +133,31 @@
 	
 	
 	
-		PrepareRenderToBuffer(rttFrameBuffers[0]);
-		//PrepareRenderToScreen();
+		//PrepareRenderToBuffer(rttFrameBuffers[0]);
+		PrepareRenderToScreen();
 		
 		
 		gl.enable(gl.DEPTH_TEST);
 		//gl.enable(gl.CULL_FACE);
 		
 		
-		
-			
+		DrawGameObject(screenQuadTrailsB);
 		for(let i =0; i < _gameObjects.length; i++)
 		{			
 			DrawGameObject(_gameObjects[i], seconds);
 		}
-		
+				
+
+
 	
-		FinishRenderToBuffer(rttFrameTextures[0]);
+		//FinishRenderToBuffer(rttFrameTextures[0]);
 		
 		
 		//PrepareRenderToBuffer(rttFrameBuffers[1]);
-		PrepareRenderToScreen();
+		//PrepareRenderToScreen();
 
-		gl.disable(gl.DEPTH_TEST);
-		DrawGameObject(screenQuadWave);
+		//gl.disable(gl.DEPTH_TEST);
+		//DrawGameObject(screenQuadWave);
 		/*FinishRenderToBuffer(rttFrameTextures[1]);
 		
 		
@@ -201,6 +202,8 @@
 			ReadyUpGameObject(screenQuadWave);
 			ReadyUpGameObject(screenQuadInvert);
 			ReadyUpGameObject(screenQuadGradient);
+			ReadyUpGameObject(screenQuadTrailsA);
+			ReadyUpGameObject(screenQuadTrailsB);
 			for(let i = 0; i < _gameObjects.length; i++)
 			{
 				if(_gameObjects[i].Ready == false)
@@ -242,8 +245,9 @@ var ext;
 		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture0", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null, null, ["gKaas"]);
 
 		screenQuadTrailsA = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture2", 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null, null);
-		screenQuadTrailsB = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture3", 'shader-fs-screenQuad-Green', 'shader-vs-screenQuad', null, null);
-		
+		screenQuadTrailsB = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "Apple_Albedo", 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null);
+		//		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
+
 		//Invert
 		LoadModels();
 
@@ -628,7 +632,7 @@ var ext;
 	varying vec2 vTextureCoord;
 	varying vec4 vPosition;
 
-	uniform float gTime;
+	uniform float gTime2;
 		
 	uniform vec3 uAmbientColor;
 	uniform vec3 uPointLightingLocation;
@@ -638,7 +642,7 @@ var ext;
     void main(void) 
 	{
 		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);// * 0.9;// * (.99) + (.5/512.);;
-		uv.y += sin(uv.x * 8.0 + gTime * 3.0) * 0.01;
+		uv.y += sin(uv.x * 8.0 + gTime2 * 3.0) * 0.01;
 		
         vec4 textureColor = texture2D(uSampler, uv);
 		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
@@ -651,7 +655,7 @@ var ext;
 	varying vec2 vTextureCoord;
 	varying vec4 vPosition;
 
-	uniform float gTime;
+	uniform float gTime2;
 		
 	uniform vec3 uAmbientColor;
 	uniform vec3 uPointLightingLocation;
@@ -676,7 +680,7 @@ var ext;
 	varying vec2 vTextureCoord;
 	varying vec4 vPosition;
 
-	uniform float gTime;
+	uniform float gTime2;
 	uniform float gKaas;
 	
 	uniform vec3 uAmbientColor;
@@ -700,7 +704,7 @@ var ext;
 	varying vec2 vTextureCoord;
 	varying vec4 vPosition;
 
-	uniform float gTime;
+	uniform float gTime2;
 	
 	uniform vec3 uAmbientColor;
 	uniform vec3 uPointLightingLocation;
@@ -723,7 +727,7 @@ var ext;
 	varying vec2 vTextureCoord;
 	varying vec4 vPosition;
 
-	uniform float gTime;
+	uniform float gTime2;
 	
 	uniform vec3 uAmbientColor;
 	uniform vec3 uPointLightingLocation;
@@ -741,17 +745,27 @@ var ext;
 <script id="shader-vs-screenQuad" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec2 aTextureCoord;
+	//attribute vec3 aVertexNormal;
 
 	uniform mat4 uMVMatrix;
 	uniform mat4 uPMatrix;
 	uniform mat3 uNMatrix;
+
+	uniform float gTime;
 	
 	varying vec2 vTextureCoord;
+	//varying vec3 vTransformedNormal;
 	varying vec4 vPosition;
 	
     void main(void) 
 	{
+		//vTransformedNormal = uNMatrix * aVertexNormal;
+
 		vPosition = vec4(aVertexPosition, 1.0);
+		
+	
+	
+	
 		gl_Position = vPosition;
 		vTextureCoord = aTextureCoord;
     }
