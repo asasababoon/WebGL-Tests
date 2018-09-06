@@ -98,7 +98,7 @@
 	function FinishRenderToBuffer(texture)
 	{
 		gl.bindTexture(gl.TEXTURE_2D, texture);
-        //gl.generateMipmap(gl.TEXTURE_2D);
+        gl.generateMipmap(gl.TEXTURE_2D);
         gl.bindTexture(gl.TEXTURE_2D, null);
 	}
 	
@@ -111,13 +111,19 @@
 	
     function drawScene(seconds) 
 	{
+		uniformsArray["Ambient"] = [parseFloat(document.getElementById("ambientR").value), parseFloat(document.getElementById("ambientG").value), parseFloat(document.getElementById("ambientB").value)];
+		uniformsArray["LightPos"] = [parseFloat(document.getElementById("lightPositionX").value), parseFloat(document.getElementById("lightPositionY").value), parseFloat(document.getElementById("lightPositionZ").value)];
+		uniformsArray["LightCol"] = [parseFloat(document.getElementById("pointR").value), parseFloat(document.getElementById("pointG").value), parseFloat(document.getElementById("pointB").value)];
+		uniformsArray["gTime"] = timePassed;
+		uniformsArray["gTime2"] = timePassed;
+		
 		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
 		
 		// pass along values + update the start   B -> A
 		PrepareRenderToBuffer(rttFrameBuffers[2]);
 		//gl.disable(gl.DEPTH_TEST);
-		//DrawGameObject(screenQuadTrailsB);
-		FinishRenderToBuffer(rttFrameTextures[2]);
+		//DrawGameObject(screenQuadWave);
+		//FinishRenderToBuffer(rttFrameTextures[2]);
 	
 		// store away the updated values back in A -> B
 		
@@ -129,16 +135,13 @@
 	
 		PrepareRenderToBuffer(rttFrameBuffers[0]);
 		//PrepareRenderToScreen();
-      
+		
+		
 		gl.enable(gl.DEPTH_TEST);
 		//gl.enable(gl.CULL_FACE);
 		
 		
-		uniformsArray["Ambient"] = [parseFloat(document.getElementById("ambientR").value), parseFloat(document.getElementById("ambientG").value), parseFloat(document.getElementById("ambientB").value)];
-		uniformsArray["LightPos"] = [parseFloat(document.getElementById("lightPositionX").value), parseFloat(document.getElementById("lightPositionY").value), parseFloat(document.getElementById("lightPositionZ").value)];
-		uniformsArray["LightCol"] = [parseFloat(document.getElementById("pointR").value), parseFloat(document.getElementById("pointG").value), parseFloat(document.getElementById("pointB").value)];
-		uniformsArray["gTime"] = timePassed;
-		uniformsArray["gTime2"] = timePassed;
+		
 			
 		for(let i =0; i < _gameObjects.length; i++)
 		{			
@@ -149,12 +152,12 @@
 		FinishRenderToBuffer(rttFrameTextures[0]);
 		
 		
-		PrepareRenderToBuffer(rttFrameBuffers[1]);
-		//PrepareRenderToScreen();
+		//PrepareRenderToBuffer(rttFrameBuffers[1]);
+		PrepareRenderToScreen();
 
 		gl.disable(gl.DEPTH_TEST);
 		DrawGameObject(screenQuadWave);
-		FinishRenderToBuffer(rttFrameTextures[1]);
+		/*FinishRenderToBuffer(rttFrameTextures[1]);
 		
 		
 		PrepareRenderToBuffer(rttFrameBuffers[0]);
