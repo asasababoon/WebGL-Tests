@@ -23,13 +23,13 @@ function CreateQuadScreen()
 	var vertexNormals = [];
 	var vertexTextureCoords = [];
 	
-	AddPoint([-1.0, 1.0, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0],vertexPositions, vertexNormals, vertexTextureCoords);
-	AddPoint([1.0, 1.0, 0.0], [1.0, 1.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);	
-	AddPoint([1.0, -1.0, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([-1.0, 1.0, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0],vertexPositions, vertexTextureCoords, vertexNormals);
+	AddPoint([1.0, 1.0, 0.0], [1.0, 1.0], [0.0, 0.0, 1.0], vertexPositions, vertexTextureCoords, vertexNormals);	
+	AddPoint([1.0, -1.0, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexTextureCoords, vertexNormals);
 
-	AddPoint([-1.0, 1.0, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);
-	AddPoint([1.0, -1.0, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);	
-	AddPoint([-1.0, -1.0, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexNormals, vertexTextureCoords);
+	AddPoint([-1.0, 1.0, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0],vertexPositions, vertexTextureCoords, vertexNormals);
+	AddPoint([1.0, -1.0, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexTextureCoords, vertexNormals);	
+	AddPoint([-1.0, -1.0, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0], vertexPositions, vertexTextureCoords, vertexNormals);
 	
 	var model = new Model(vertexPositions, vertexTextureCoords, vertexNormals);
 	return model;
@@ -52,13 +52,13 @@ function CreateShpere(resolution, radius)
 	{
 		for(var x = 0; x < resolution - 1; x++)
 		{				
-			AddPointShpere(x, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x, y+1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x+1, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
+			AddPointShpere(x, y, resolution,radius,vertexPositions, vertexTextureCoords, vertexNormals);
+			AddPointShpere(x, y+1, resolution,radius, vertexPositions, vertexTextureCoords, vertexNormals);
+			AddPointShpere(x+1, y, resolution,radius, vertexPositions, vertexTextureCoords, vertexNormals);
 			
-			AddPointShpere(x + 1, y, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x, y + 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
-			AddPointShpere(x+1, y + 1, resolution,radius, vertexPositions, vertexNormals, vertexTextureCoords);
+			AddPointShpere(x + 1, y, resolution,radius,vertexPositions, vertexTextureCoords, vertexNormals);
+			AddPointShpere(x, y + 1, resolution,radius, vertexPositions, vertexTextureCoords, vertexNormals);
+			AddPointShpere(x+1, y + 1, resolution,radius, vertexPositions, vertexTextureCoords, vertexNormals);
 		}
 	}
 	
@@ -67,7 +67,7 @@ function CreateShpere(resolution, radius)
 	return model;
 }
 
-function AddPointShpere(x, y, resolution, radius, vertexPositions, vertexNormals, vertexTextureCoords)
+function AddPointShpere(x, y, resolution, radius, vertexPositions, vertexTextureCoords, vertexNormals)
 {
 	var progressX = x / (resolution - 1);
 	var progressY = y / (resolution - 1);
@@ -93,7 +93,7 @@ function AddPointShpere(x, y, resolution, radius, vertexPositions, vertexNormals
 	vertexTextureCoords.push(progressY);
 }
 
-function AddPoint(_pos, _uv, _normal, vertexPositions, vertexNormals, vertexTextureCoords)
+function AddPoint(_pos, _uv, _normal, vertexPositions, vertexTextureCoords, vertexNormals)
 {
 	vertexPositions.push(_pos[0]);
 	vertexPositions.push(_pos[1]);
@@ -107,5 +107,13 @@ function AddPoint(_pos, _uv, _normal, vertexPositions, vertexNormals, vertexText
 	
 	vertexTextureCoords.push(_uv[0]);
 	vertexTextureCoords.push(_uv[1]);
+}
+
+function AddPoint_1(_pos, _uv, _normal, _uv1, vertexPositions, vertexTextureCoords, vertexNormals, vertexUVs_1)
+{
+	AddPoint(_pos, _uv, _normal, vertexPositions, vertexTextureCoords, vertexNormals);
+	
+	vertexUVs_1.push(_uv1[0]);
+	vertexUVs_1.push(_uv1[1]);
 }
 

@@ -1,8 +1,11 @@
-function Model(_positions, _uvs, _normals)
+function Model(_positions, _uvs0, _normals, _uv1, _uv2)
 {	
 	this.vertexPositions = _positions;
-	this.vertexTextureCoords = _uvs;
+	this.vertexTextureCoords = _uvs0;
 	this.vertexNormals = _normals;
+	this.uvs1 = _uv1;
+	this.uvs2 = _uv2;
+	
 	this.totalVertexCount = _positions.length / 3;
 }
 

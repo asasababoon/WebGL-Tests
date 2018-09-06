@@ -11,7 +11,7 @@
 <script type="text/javascript" src="TextureLoader.js"></script>
 <script type="text/javascript" src="HelperFunctions.js"></script>
 <script type="text/javascript" src="Primitives.js"></script>
-
+<script type="text/javascript" src="CustomGeometry.js"></script>
 
 
 <script type="text/javascript">
@@ -30,6 +30,8 @@
 	var screenQuadWave;
 	var screenQuadInvert;
 	var screenQuadGradient;
+	var screenQuadTrailsA;
+	var screenQuadTrailsB;
 		
 	var rttFrameBuffers = [];
 	var rttFrameTextures = [];
@@ -108,9 +110,25 @@
 	
     function drawScene(seconds) 
 	{
+		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+		
+		// pass along values + update the start   B -> A
+		PrepareRenderToBuffer(rttFrameBuffers[2]);
+		//gl.disable(gl.DEPTH_TEST);
+		//DrawGameObject(screenQuadTrailsB);
+		FinishRenderToBuffer(rttFrameTextures[2]);
+	
+		// store away the updated values back in A -> B
+		
+		
+		
+		// let trails use A texture
+	
+	
+	
 		PrepareRenderToBuffer(rttFrameBuffers[0]);
 		//PrepareRenderToScreen();
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+      
 		gl.enable(gl.DEPTH_TEST);
 		//gl.enable(gl.CULL_FACE);
 		
@@ -206,15 +224,8 @@
 	{
         var canvas = document.getElementById("glenns-canvas");
         initGL(canvas);
-		rttFrameBuffers.push(gl.createFramebuffer());
-		rttFrameBuffers.push(gl.createFramebuffer());
-		
-		rttFrameTextures.push(gl.createTexture());
-		rttFrameTextures.push(gl.createTexture());
-		
-		initTextureFramebuffer(rttFrameBuffers[0], rttFrameTextures[0], 512, 512);
-		initTextureFramebuffer(rttFrameBuffers[1], rttFrameTextures[1], 512, 512);
-	
+
+		SetupRenderTextures();
 		SetupModels();		
 		SetupTextures();
 		CreateGameObjects();
@@ -224,6 +235,9 @@
 		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture1", 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
 		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture0", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null, null, ["gKaas"]);
 
+		screenQuadTrailsA = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture2", 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null, null);
+		screenQuadTrailsB = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture3", 'shader-fs-screenQuad-Green', 'shader-vs-screenQuad', null, null);
+		
 		//Invert
 		LoadModels();
 
@@ -236,6 +250,35 @@
 	
         tick();
     }
+	
+	function SetupRenderTextures()
+	{
+		rttFrameBuffers.push(gl.createFramebuffer());
+		rttFrameBuffers.push(gl.createFramebuffer());		
+		rttFrameTextures.push(gl.createTexture());
+		rttFrameTextures.push(gl.createTexture());
+		
+		var rttSettings = []; rttSettings.width = 512; rttSettings.height = 512; 
+		rttSettings.textureFormat = gl.UNSIGNED_BYTE; rttSettings.filter = null;
+		rttSettings.internalFormat = gl.RGBA;
+
+		initTextureFramebuffer(rttFrameBuffers[0], rttFrameTextures[0], rttSettings);
+		initTextureFramebuffer(rttFrameBuffers[1], rttFrameTextures[1], rttSettings);
+		
+		////////////////////////////////////////////////////////////
+		
+		rttFrameBuffers.push(gl.createFramebuffer());
+		rttFrameBuffers.push(gl.createFramebuffer());
+		rttFrameTextures.push(gl.createTexture());
+		rttFrameTextures.push(gl.createTexture());
+		
+		//rttSettings = []; rttSettings.width = 512; rttSettings.height = 512; 
+		//rttSettings.textureFormat = gl.GL_FLOAT; rttSettings.filter = gl.NEAREST;
+		//rttSettings.internalFormat = gl.GL_RGBA32F;
+		
+		initTextureFramebuffer(rttFrameBuffers[2], rttFrameTextures[2], rttSettings);
+		initTextureFramebuffer(rttFrameBuffers[3], rttFrameTextures[3], rttSettings);
+	}
 	
 	var mouseDown = false;
 	var lastMouseX = null;
@@ -325,25 +368,32 @@
   
 
 
-	function initTextureFramebuffer(buffer, texture, width, height) 
+	function initTextureFramebuffer(buffer, texture, settings) 
 	{
 		//buffer = gl.createFramebuffer();
 		gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
-		buffer.width = width;
-		buffer.height = height;
+		buffer.width = settings.width;
+		buffer.height = settings.height;
 		
 		//texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, texture);
+		// GL_FLOAT      gl.UNSIGNED_BYTE
+		gl.texImage2D(gl.TEXTURE_2D, 0, settings.internalFormat, buffer.width, buffer.height, 0, gl.RGBA, settings.textureFormat, null);
 		
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-
-//		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-//		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-
-		gl.generateMipmap(gl.TEXTURE_2D);
+		if(settings.filter == null)
+		{
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+			gl.generateMipmap(gl.TEXTURE_2D);
+		}
+		else
+		{
+			// NEAREST is the least attractive of these, as it just says you should use the original image as-is, which means that it will look very blocky when close-up
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, settings.filter);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, settings.filter);
+		}
 		
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, buffer.width, buffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+		
 		
 		
 		var renderbuffer = gl.createRenderbuffer();
@@ -362,6 +412,8 @@
 	{	
 		AddModel(CreateShpere(20, 10), "Sphere");
 		AddModel(CreateQuadScreen(), "Quad");
+		AddModel(CreateTrail(10), "Trail");
+		AddModel(CreateTrailsFollowing(10, 5), "Trails");
 		PrepareLoadModel("Models/Lowpoly_tree_sample.obj", "Tree");
 		PrepareLoadModel("Models/glenn_monkey.obj", "Monkey");
 	}
@@ -369,8 +421,13 @@
 	function SetupTextures()
 	{
 		PrepareLoadTexture("Textures/Apple/appleD.jpg", "Apple_Albedo");
-		AddTexture(rttFrameTextures[0], "rttTexture0");
-		AddTexture(rttFrameTextures[1], "rttTexture1");
+		
+		if(rttFrameTextures == null)
+			return;
+		for(var i =0; i < rttFrameTextures.length; i++)
+		{
+			AddTexture(rttFrameTextures[i], "rttTexture" + i);
+		}
 	}
 	
 	
@@ -627,6 +684,50 @@
     }
 </script>
 
+<script id="shader-fs-screenQuad-Green" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec4 vPosition;
+
+	uniform float gTime;
+	
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+	  
+	uniform sampler2D uSampler;
+    void main(void) 
+	{
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);// * (.99)  + (.5/512.);
+        vec4 textureColor = texture2D(uSampler, uv);
+		textureColor.rgb *= 0.0;
+		textureColor.g = 0.8;
+		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+    }
+</script>
+
+<script id="shader-fs-screenQuad-Clean" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec4 vPosition;
+
+	uniform float gTime;
+	
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+	  
+	uniform sampler2D uSampler;
+    void main(void) 
+	{
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
+        vec4 textureColor = texture2D(uSampler, uv);
+		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+    }
+</script>
+
 <script id="shader-vs-screenQuad" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec2 aTextureCoord;
@@ -657,7 +758,7 @@
 <body onload="webGLStart();">
     <a href="http://learningwebgl.com/blog/?p=1008">&lt;&lt; Back to Lesson 9</a><br />
 
-    <canvas id="glenns-canvas" style="border: none;" width="500" height="500"></canvas>
+    <canvas id="glenns-canvas" style="border: none;" width="512" height="512"></canvas>
 	<br/>
 	
 	<table style="border: 0; padding: 10px;">
