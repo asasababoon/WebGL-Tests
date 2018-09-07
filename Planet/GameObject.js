@@ -3,7 +3,7 @@ function NullCreation(_position, _rotation, _scale)
 	return Creation(_position, _rotation, _scale, "Empty", null, null, null, null)
 }
 
-function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTags, _shaderFragment, _shaderVertex, _vertexDataTypes, _extraUniformsF3, _extraUniformsF1)
+function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTags, _shaderFragment, _shaderVertex, _vertexDataTypes, _extraUniformsF3, _extraUniformsF1, _extraUniformsSampler)
 {
 	this.name= _name;
 	this.mesh= [];//= Object
@@ -69,7 +69,7 @@ function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTags, 
 		
 		this.material.shaderVertex = _shaderVertex;
 		this.material.shaderFragment = _shaderFragment;
-		this.material.shaderProgram = initShaders(this, _extraUniformsF3, _extraUniformsF1);	
+		this.material.shaderProgram = initShaders(this, _extraUniformsF3, _extraUniformsF1, _extraUniformsSampler);	
 	}
 	else
 	{
@@ -175,7 +175,7 @@ Creation.prototype.CalculateFullTransform = function()
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 		shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
 		
-		/*
+		
 		shaderProgram.uniformsSamplers = [];
 		AddUniform(shaderProgram.uniformsSamplers, "uSampler", gl.getUniformLocation(shaderProgram, "uSampler"));
 		if(_extraUniformsSampler != null)
@@ -185,7 +185,6 @@ Creation.prototype.CalculateFullTransform = function()
 				AddUniform(shaderProgram.uniformsSamplers, _extraUniformsSampler[i], gl.getUniformLocation(shaderProgram, _extraUniformsSampler[i]));
 			}
 		}
-		*/
       
 		shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler");
 		shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler2");

@@ -255,6 +255,7 @@ var ext;
         var canvas = document.getElementById("glenns-canvas");
         initGL(canvas);
 		ext = gl.getExtension('OES_texture_float');
+		SetupGLTextureParams();
 	
 		SetupRenderTextures();
 		SetupModels();		
@@ -267,9 +268,12 @@ var ext;
 		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture0"], 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null, null, ["gKaas"]);
 
 		screenQuadTrailsA = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture2"], 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null, null);
-		screenQuadTrailsB = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture3", "Apple_Albedo"], 'shader-fs-screenQuad-AfterImage', 'shader-vs-screenQuad', null);
+		screenQuadTrailsB = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1],
+							"screenQuad", "Quad", ["rttTexture3", "Apple_Albedo"], 'shader-fs-screenQuad-AfterImage', 'shader-vs-screenQuad',
+							null, null, null, ["uSampler2"]);
 		screenQuadTrailsC = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["Apple_Albedo"], 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null);
 		//		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
+//Orange_Albedo
 
 		//Invert
 		LoadModels();
@@ -761,6 +765,39 @@ var ext;
 	uniform sampler2D uSampler2;
     void main(void) 
 	{
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
+        vec4 textureColor = texture2D(uSampler, uv + 0.003);
+		textureColor += texture2D(uSampler, uv - 0.003);
+		textureColor *= 0.5;
+		
+		vec4 original = texture2D(uSampler2, uv);
+		
+		//uv.x += (gTime2 * 0.1);
+		//textureColor += texture2D(uSampler2, uv) * 0.02;
+		
+		//textureColor.rgb *= 0.99;
+		gl_FragColor = vec4(mix(textureColor.rgb, original.rgb, 0.1), 1);
+    }
+</script>
+
+<script id="shader-fs-screenQuad-DataMove" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec4 vPosition;
+
+	uniform float gTime2;
+	uniform float pixelWidthHalf;
+	
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+		
+	uniform sampler2D uSampler;
+	uniform sampler2D uSampler2;
+    void main(void) 
+	{
+	// update at x 0   update the rest  need half pixel width
 		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
         vec4 textureColor = texture2D(uSampler, uv + 0.003);
 		textureColor += texture2D(uSampler, uv - 0.003);

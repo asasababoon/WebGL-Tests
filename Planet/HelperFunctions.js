@@ -1,5 +1,16 @@
 var mvMatrix = mat4.create();
 var pMatrix = mat4.create();
+var glTextureParamaters = [];
+
+function SetupGLTextureParams()
+{
+	gl.activeTexture(gl.TEXTURE0);
+	glTextureParamaters.push(gl.getParameter(gl.ACTIVE_TEXTURE));
+	gl.activeTexture(gl.TEXTURE1);
+	glTextureParamaters.push(gl.getParameter(gl.ACTIVE_TEXTURE));
+	gl.activeTexture(gl.TEXTURE2);
+	glTextureParamaters.push(gl.getParameter(gl.ACTIVE_TEXTURE));
+}
 
 function DrawGameObject(gameObject, seconds)
 {
@@ -63,18 +74,19 @@ function DrawGameObject(gameObject, seconds)
 		we extract from the shader program in initShaders); 
 		this tells the shader that we’re using texture zero. 
 		*/
-		var uou = 0;
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textureSettings.Textures[0]);
+
+		//gl.activeTexture(gl.TEXTURE0);
+		//gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textureSettings.Textures[0]);
 			// set uniform??	
-		gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
+		//gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
 		
-		if(gameObject.material.textureSettings.Textures.length > 1)
+		
+		for(var i = 0; i < gameObject.material.textureSettings.Textures.length; i++)
 		{
-			gl.activeTexture(gl.TEXTURE1);
-			gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textureSettings.Textures[1]);
+			gl.activeTexture(glTextureParamaters[i]);
+			gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textureSettings.Textures[i]);
 				// set uniform??	
-			gl.uniform1i(gameObject.material.shaderProgram.samplerUniform2, 1);
+			gl.uniform1i(gameObject.material.shaderProgram.uniformsSamplers[i].uLocation, i);
 		}
 		
 
