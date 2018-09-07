@@ -3,7 +3,6 @@ var pMatrix = mat4.create();
 
 function DrawGameObject(gameObject, seconds)
 {
-	//console.log("draw gameObject " + gameObject.name);
 	if(gameObject.NullObject == false)
 	{
 		var value;
@@ -41,10 +40,17 @@ function DrawGameObject(gameObject, seconds)
 			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexTextureCoordBuffer);
 			gl.vertexAttribPointer(gameObject.material.shaderProgram.textureCoordAttribute, gameObject.mesh.cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
+		
 		if(gameObject.mesh.dataTypes.requireNormals)
 		{
+			gl.enableVertexAttribArray(gameObject.material.shaderProgram.vertexNormalAttribute);
+
 			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexNormalBuffer);
 			gl.vertexAttribPointer(gameObject.material.shaderProgram.vertexNormalAttribute, gameObject.mesh.cubeVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		else
+		{
+			gl.disableVertexAttribArray(2);
 		}
 		
 		/*
@@ -57,11 +63,22 @@ function DrawGameObject(gameObject, seconds)
 		we extract from the shader program in initShaders); 
 		this tells the shader that we’re using texture zero. 
 		*/
+		var uou = 0;
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textures.MainTexture);
-			
-		// set uniform??	
+		gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textureSettings.Textures[0]);
+			// set uniform??	
 		gl.uniform1i(gameObject.material.shaderProgram.samplerUniform, 0);
+		
+		if(gameObject.material.textureSettings.Textures.length > 1)
+		{
+			gl.activeTexture(gl.TEXTURE1);
+			gl.bindTexture(gl.TEXTURE_2D, gameObject.material.textureSettings.Textures[1]);
+				// set uniform??	
+			gl.uniform1i(gameObject.material.shaderProgram.samplerUniform2, 1);
+		}
+		
+
+	
 	}
 	
 	let transform = mat4.create();

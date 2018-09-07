@@ -164,6 +164,7 @@ function SetModel(_model, gameObject)
 	
 	if(gameObject.mesh.dataTypes.requireNormals)
 	{
+		
 		cubeVertexNormalBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexNormalBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexNormals), gl.STATIC_DRAW);

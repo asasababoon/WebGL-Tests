@@ -3,12 +3,12 @@ function NullCreation(_position, _rotation, _scale)
 	return Creation(_position, _rotation, _scale, "Empty", null, null, null, null)
 }
 
-function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _shaderFragment, _shaderVertex, _vertexDataTypes, _extraUniformsF3, _extraUniformsF1)
+function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTags, _shaderFragment, _shaderVertex, _vertexDataTypes, _extraUniformsF3, _extraUniformsF1)
 {
 	this.name= _name;
 	this.mesh= [];//= Object
 	this.material= [];//= Object
-	this.material.textures = [];//= Object
+	this.material.textureSettings = [];//= Object
 	this.transform = [];//= Object
 	
 	this.gameLogic = [];//= Object
@@ -48,8 +48,8 @@ function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTag, _
 	console.log("gameobject is null Trandform " + this.NullObject);
 
 	
-	this.material.textures.MainTexture = null;
-	this.material.textures.Tag = _textureTag;
+	this.material.textureSettings.Textures = [];
+	this.material.textureSettings.Tags = _textureTags;
 	
 	if(this.NullObject == false)
 	{
@@ -84,9 +84,9 @@ Creation.prototype.AddModel = function(_model)
 	SetModel(_model, this);
 }
 
-Creation.prototype.AddTexture = function(_texture)
+Creation.prototype.AddTextures = function(_textures)
 {
-	this.material.textures.MainTexture = _texture;
+	this.material.textureSettings.Textures = _textures;
 }
 
 Creation.prototype.sayHi = function() 
@@ -135,7 +135,7 @@ Creation.prototype.CalculateFullTransform = function()
 
 
 
-   function initShaders(gameObject, _extraUniformsF3, _extraUniformsF1) 
+   function initShaders(gameObject, _extraUniformsF3, _extraUniformsF1, _extraUniformsSampler) 
    {		
         var fragmentShader = getShader(gl, gameObject.material.shaderFragment);
         var vertexShader = getShader(gl, gameObject.material.shaderVertex);
@@ -174,8 +174,21 @@ Creation.prototype.CalculateFullTransform = function()
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 		shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
-        shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
-
+		
+		/*
+		shaderProgram.uniformsSamplers = [];
+		AddUniform(shaderProgram.uniformsSamplers, "uSampler", gl.getUniformLocation(shaderProgram, "uSampler"));
+		if(_extraUniformsSampler != null)
+		{
+			for(var i =0; i < _extraUniformsSampler.length; i++)
+			{
+				AddUniform(shaderProgram.uniformsSamplers, _extraUniformsSampler[i], gl.getUniformLocation(shaderProgram, _extraUniformsSampler[i]));
+			}
+		}
+		*/
+      
+		shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler");
+		shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler2");
 		
 		shaderProgram.uniformsF3 = [];
 		AddUniform(shaderProgram.uniformsF3, "Ambient", gl.getUniformLocation(shaderProgram, "uAmbientColor"));
@@ -211,9 +224,15 @@ function AddUniform(_array, _name, _location)
 	bla.uName = _name;
 	bla.uLocation = _location;
 	_array.push(bla);
-	
 }
 	
+function AddUniform_ID(_array, _name, _location, _ID) 
+{
+	var bla = [];
+	bla.uName = _name;
+	bla.uLocation = _location;
+	_array.push(bla);
+}
 
 	
 	

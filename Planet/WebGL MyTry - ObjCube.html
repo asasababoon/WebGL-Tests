@@ -32,7 +32,8 @@
 	var screenQuadGradient;
 	var screenQuadTrailsA;
 	var screenQuadTrailsB;
-		
+	var screenQuadTrailsC;
+	
 	var rttFrameBuffers = [];
 	var rttFrameTextures = [];
 	
@@ -109,29 +110,33 @@
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	}
 	
-    function drawScene(seconds) 
+	function SetUpUniforms()
 	{
 		uniformsArray["Ambient"] = [parseFloat(document.getElementById("ambientR").value), parseFloat(document.getElementById("ambientG").value), parseFloat(document.getElementById("ambientB").value)];
 		uniformsArray["LightPos"] = [parseFloat(document.getElementById("lightPositionX").value), parseFloat(document.getElementById("lightPositionY").value), parseFloat(document.getElementById("lightPositionZ").value)];
 		uniformsArray["LightCol"] = [parseFloat(document.getElementById("pointR").value), parseFloat(document.getElementById("pointG").value), parseFloat(document.getElementById("pointB").value)];
 		uniformsArray["gTime"] = timePassed;
 		uniformsArray["gTime2"] = timePassed;
+	}
+	
+    function drawScene(seconds) 
+	{
+		console.log("drawScene");
+	
+		SetUpUniforms();
 		
-		mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+	
 		
 		// pass along values + update the start   B -> A
 		PrepareRenderToBuffer(rttFrameBuffers[2]);
-		//gl.disable(gl.DEPTH_TEST);
-		//DrawGameObject(screenQuadWave);
-		//FinishRenderToBuffer(rttFrameTextures[2]);
-	
-		// store away the updated values back in A -> B
+		DrawGameObject(screenQuadTrailsB);
+		
+		PrepareRenderToBuffer(rttFrameBuffers[3]);
+		DrawGameObject(screenQuadTrailsA);
+
 		
 		
 		
-		// let trails use A texture
-	
-	
 	
 		//PrepareRenderToBuffer(rttFrameBuffers[0]);
 		PrepareRenderToScreen();
@@ -140,8 +145,9 @@
 		gl.enable(gl.DEPTH_TEST);
 		//gl.enable(gl.CULL_FACE);
 		
-		
-		DrawGameObject(screenQuadTrailsB);
+		DrawGameObject(screenQuadTrailsA);
+		//DrawGameObject(screenQuadTrailsB);
+
 		for(let i =0; i < _gameObjects.length; i++)
 		{			
 			DrawGameObject(_gameObjects[i], seconds);
@@ -149,26 +155,26 @@
 				
 
 
-	
-		//FinishRenderToBuffer(rttFrameTextures[0]);
+	/*
+		FinishRenderToBuffer(rttFrameTextures[0]);
 		
 		
-		//PrepareRenderToBuffer(rttFrameBuffers[1]);
+		PrepareRenderToBuffer(rttFrameBuffers[1]);
 		//PrepareRenderToScreen();
 
 		//gl.disable(gl.DEPTH_TEST);
-		//DrawGameObject(screenQuadWave);
-		/*FinishRenderToBuffer(rttFrameTextures[1]);
+		DrawGameObject(screenQuadWave);
+		FinishRenderToBuffer(rttFrameTextures[1]);
 		
 		
 		PrepareRenderToBuffer(rttFrameBuffers[0]);
 		DrawGameObject(screenQuadInvert);
 		FinishRenderToBuffer(rttFrameTextures[0]);
 		
-		
+	
 		PrepareRenderToScreen();
 		DrawGameObject(screenQuadGradient);
-		//*/
+		*/
     }
 
 
@@ -204,6 +210,8 @@
 			ReadyUpGameObject(screenQuadGradient);
 			ReadyUpGameObject(screenQuadTrailsA);
 			ReadyUpGameObject(screenQuadTrailsB);
+			ReadyUpGameObject(screenQuadTrailsC);
+			
 			for(let i = 0; i < _gameObjects.length; i++)
 			{
 				if(_gameObjects[i].Ready == false)
@@ -211,6 +219,14 @@
 					ReadyUpGameObject(_gameObjects[i]);
 				}
 			}
+			
+			SetUpUniforms();
+			mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
+				
+			// prepare Rtt
+			PrepareRenderToBuffer(rttFrameBuffers[3]);
+			DrawGameObject(screenQuadTrailsC);
+
 		}
     }
 	
@@ -221,8 +237,14 @@
 		let meshTag = _gameObject.mesh.Tag;
 		if(meshTag != null)_gameObject.AddModel(modelsReady[meshTag]);
 		
-		let textureTag = _gameObject.material.textures.Tag;
-		if(textureTag)_gameObject.AddTexture(texturesReady[textureTag]);
+		var textures = []
+		for(var i = 0; i < _gameObject.material.textureSettings.Tags.length; i++)
+		{
+			let textureTag = _gameObject.material.textureSettings.Tags[i];
+			if(textureTag) textures.push(texturesReady[textureTag]);
+		}
+		
+		_gameObject.AddTextures(textures);
 	}
 	
 	
@@ -240,12 +262,13 @@ var ext;
 		CreateGameObjects();
 		
 		uniformsArray["gKaas"] = 1.0;
-		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture0", 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', null);
-		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture1", 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
-		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture0", 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null, null, ["gKaas"]);
+		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture0"], 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', ['vn']);
+		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture1"], 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
+		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture0"], 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null, null, ["gKaas"]);
 
-		screenQuadTrailsA = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "rttTexture2", 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null, null);
-		screenQuadTrailsB = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", "Apple_Albedo", 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null);
+		screenQuadTrailsA = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture2"], 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null, null);
+		screenQuadTrailsB = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture3", "Apple_Albedo"], 'shader-fs-screenQuad-AfterImage', 'shader-vs-screenQuad', null);
+		screenQuadTrailsC = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["Apple_Albedo"], 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null);
 		//		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
 
 		//Invert
@@ -435,6 +458,7 @@ var ext;
 	function SetupTextures()
 	{
 		PrepareLoadTexture("Textures/Apple/appleD.jpg", "Apple_Albedo");
+		PrepareLoadTexture("Textures/Orange/Color.jpg", "Orange_Albedo");
 		
 		if(rttFrameTextures == null)
 			return;
@@ -448,7 +472,7 @@ var ext;
 	var planet;
 	function CreateGameObjects()
 	{
-		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
+		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", ["Apple_Albedo"], 'shader-fs', 'shader-vs', ['vn']);
 		_gameObjects.push(planet);
 	
 		var radius = 10;
@@ -460,7 +484,7 @@ var ext;
 			var treeHolder = new Creation([pos[0], pos[1], pos[2]], [0, 0, 0.0], [1 * scaleFactor, 1 * scaleFactor, 1 * scaleFactor], "TreeHolder", null, null, null, null, null);
 			_gameObjects.push(treeHolder);
 
-			var tree = new Creation([0, 0, 0.0], [0, 0, 0.0], [1, 1, 1], "Tree", "Tree", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
+			var tree = new Creation([0, 0, 0.0], [0, 0, 0.0], [1, 1, 1], "Tree", "Tree", ["Apple_Albedo"], 'shader-fs', 'shader-vs', ['vn']);
 			_gameObjects.push(tree);
 
 			mat4.rotateX(tree.transform.MatrixFull, DegToRad(-90));
@@ -715,9 +739,40 @@ var ext;
 	{
 		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);// * (.99)  + (.5/512.);
         vec4 textureColor = texture2D(uSampler, uv);
-		textureColor.rgb *= 0.0;
-		textureColor.g = 0.8;
+		//textureColor.rgb *= 0.0;
+		textureColor.g += 0.001;
 		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+    }
+</script>
+
+<script id="shader-fs-screenQuad-AfterImage" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec4 vPosition;
+
+	uniform float gTime2;
+	
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+	  
+	uniform sampler2D uSampler;
+	uniform sampler2D uSampler2;
+    void main(void) 
+	{
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
+        vec4 textureColor = texture2D(uSampler, uv + 0.003);
+		textureColor += texture2D(uSampler, uv - 0.003);
+		textureColor *= 0.5;
+		
+		vec4 original = texture2D(uSampler2, uv);
+		
+		//uv.x += (gTime2 * 0.1);
+		//textureColor += texture2D(uSampler2, uv) * 0.02;
+		
+		//textureColor.rgb *= 0.99;
+		gl_FragColor = vec4(mix(textureColor.rgb, original.rgb, 0.1), 1);
     }
 </script>
 
@@ -745,7 +800,7 @@ var ext;
 <script id="shader-vs-screenQuad" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec2 aTextureCoord;
-	//attribute vec3 aVertexNormal;
+	attribute vec3 aVertexNormal;
 
 	uniform mat4 uMVMatrix;
 	uniform mat4 uPMatrix;
@@ -754,12 +809,12 @@ var ext;
 	uniform float gTime;
 	
 	varying vec2 vTextureCoord;
-	//varying vec3 vTransformedNormal;
+	varying vec3 vTransformedNormal;
 	varying vec4 vPosition;
 	
     void main(void) 
 	{
-		//vTransformedNormal = uNMatrix * aVertexNormal;
+		vTransformedNormal = uNMatrix * aVertexNormal;
 
 		vPosition = vec4(aVertexPosition, 1.0);
 		
