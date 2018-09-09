@@ -110,11 +110,17 @@
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 	}
 	
+	var mousePos = [];
+	mousePos[0] = 500;
+	mousePos[1] = 500;
 	function SetUpUniforms()
 	{
 		uniformsArray["Ambient"] = [parseFloat(document.getElementById("ambientR").value), parseFloat(document.getElementById("ambientG").value), parseFloat(document.getElementById("ambientB").value)];
 		uniformsArray["LightPos"] = [parseFloat(document.getElementById("lightPositionX").value), parseFloat(document.getElementById("lightPositionY").value), parseFloat(document.getElementById("lightPositionZ").value)];
 		uniformsArray["LightCol"] = [parseFloat(document.getElementById("pointR").value), parseFloat(document.getElementById("pointG").value), parseFloat(document.getElementById("pointB").value)];
+		
+		uniformsArray["MousePos"] = [mousePos[0], mousePos[1], -100];
+
 		uniformsArray["gTime"] = timePassed;
 		uniformsArray["gTime2"] = timePassed;
 	}
@@ -138,14 +144,14 @@
 		
 		
 	
-		//PrepareRenderToBuffer(rttFrameBuffers[0]);
-		PrepareRenderToScreen();
+		PrepareRenderToBuffer(rttFrameBuffers[0]);
+		//PrepareRenderToScreen();
 		
 		
 		gl.enable(gl.DEPTH_TEST);
 		//gl.enable(gl.CULL_FACE);
 		
-		DrawGameObject(screenQuadTrailsA);
+		//DrawGameObject(screenQuadTrailsA);
 		//DrawGameObject(screenQuadTrailsB);
 
 		for(let i =0; i < _gameObjects.length; i++)
@@ -155,7 +161,7 @@
 				
 
 
-	/*
+	///*
 		FinishRenderToBuffer(rttFrameTextures[0]);
 		
 		
@@ -174,7 +180,7 @@
 	
 		PrepareRenderToScreen();
 		DrawGameObject(screenQuadGradient);
-		*/
+	//	*/
     }
 
 
@@ -225,7 +231,7 @@
 				
 			// prepare Rtt
 			PrepareRenderToBuffer(rttFrameBuffers[3]);
-			DrawGameObject(screenQuadTrailsC);
+			//DrawGameObject(screenQuadTrailsC);
 
 		}
     }
@@ -263,14 +269,15 @@ var ext;
 		CreateGameObjects();
 		
 		uniformsArray["gKaas"] = 1.0;
+		uniformsArray["pixelWidth"] = 1.0/trailLength;
 		screenQuadWave = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture0"], 'shader-fs-screenQuad-Wave', 'shader-vs-screenQuad', ['vn']);
 		screenQuadInvert = new Creation([0.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture1"], 'shader-fs-screenQuad-Invert', 'shader-vs-screenQuad', null);
 		screenQuadGradient = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture0"], 'shader-fs-screenQuad-Gradient', 'shader-vs-screenQuad', null, null, ["gKaas"]);
 
 		screenQuadTrailsA = new Creation([5.0, 0.0, 0.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["rttTexture2"], 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null, null);
 		screenQuadTrailsB = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1],
-							"screenQuad", "Quad", ["rttTexture3", "Apple_Albedo"], 'shader-fs-screenQuad-AfterImage', 'shader-vs-screenQuad',
-							null, null, null, ["uSampler2"]);
+							"screenQuad", "Quad", ["rttTexture3"], 'shader-fs-screenQuad-DataMove', 'shader-vs-screenQuad',
+							null, ["MousePos"], ["pixelWidth"], null);
 		screenQuadTrailsC = new Creation([0.0, 0.0, -40.0], [0, 180, 0.0], [1,1,1], "screenQuad", "Quad", ["Apple_Albedo"], 'shader-fs-screenQuad-Clean', 'shader-vs-screenQuad', null);
 		//		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", "Apple_Albedo", 'shader-fs', 'shader-vs', ['vn']);
 //Orange_Albedo
@@ -311,8 +318,8 @@ var ext;
 		rttFrameTextures.push(gl.createTexture());
 		
 		rttSettings = []; 
-		rttSettings.width = 512; 
-		rttSettings.height = 512; 
+		rttSettings.width = trailLength; 
+		rttSettings.height = 5; 
 		rttSettings.textureFormat = gl.FLOAT; 
 		rttSettings.filter = gl.NEAREST;
 		rttSettings.internalFormat = gl.RGBA;//32F;
@@ -353,7 +360,10 @@ var ext;
 
 	var deltaX = newX - lastMouseX;
 	
-
+	mousePos[0] = newX;
+	mousePos[1] = newY;
+	
+//	console.log(mousePos[1]);
 	
 	var tempRotX = mat4.create();
 	mat4.identity(tempRotX);
@@ -421,11 +431,18 @@ var ext;
 		// GL_FLOAT      gl.UNSIGNED_BYTE
 		gl.texImage2D(gl.TEXTURE_2D, 0, settings.internalFormat, buffer.width, buffer.height, 0, gl.RGBA, settings.textureFormat, null);
 		
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	
 		if(settings.filter == null)
 		{
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-			gl.generateMipmap(gl.TEXTURE_2D);
+			//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+			//gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+			//gl.generateMipmap(gl.TEXTURE_2D);
+			
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			
 		}
 		else
 		{
@@ -449,12 +466,14 @@ var ext;
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
 	
+	
+	var trailLength = 100;
 	function SetupModels()
 	{	
 		AddModel(CreateShpere(20, 10), "Sphere");
 		AddModel(CreateQuadScreen(), "Quad");
 		AddModel(CreateTrail(10), "Trail");
-		AddModel(CreateTrailsFollowing(10, 5), "Trails");
+		AddModel(CreateTrailsFollowing(trailLength, 5), "Trails");
 		PrepareLoadModel("Models/Lowpoly_tree_sample.obj", "Tree");
 		PrepareLoadModel("Models/glenn_monkey.obj", "Monkey");
 	}
@@ -476,6 +495,7 @@ var ext;
 	var planet;
 	function CreateGameObjects()
 	{
+	
 		planet = new Creation([0.0, 0.0, -160.0], [0, 0, 0.0], [1,1,1], "Planet", "Sphere", ["Apple_Albedo"], 'shader-fs', 'shader-vs', ['vn']);
 		_gameObjects.push(planet);
 	
@@ -497,6 +517,13 @@ var ext;
 			tree.SetParent(treeHolder);
 			treeHolder.SetParent(planet);
 		}
+		
+		
+		var trails = new Creation([0.0, 0.0, 0.0], [0, 0, 0.0], [1,1,1], "Trails", "Trails", ["rttTexture2", "rttTexture2"], 
+		'shader-fs-screenQuad-Test', 'shader-vs-DataTrail', ['vn', "uv_1"], 
+		null, null, ["uSamplerVertex"]);
+		_gameObjects.push(trails);
+	
 	}
 	
 
@@ -780,7 +807,7 @@ var ext;
     }
 </script>
 
-<script id="shader-fs-screenQuad-DataMove" type="x-shader/x-fragment">
+<script id="shader-fs-screenQuad-Blurry" type="x-shader/x-fragment">
     precision mediump float;
 	
 	varying vec2 vTextureCoord;
@@ -813,6 +840,43 @@ var ext;
     }
 </script>
 
+<script id="shader-fs-screenQuad-DataMove" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec4 vPosition;
+
+	uniform float gTime2;
+	uniform float pixelWidth;
+	uniform vec3 MousePos;
+	
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+		
+	uniform sampler2D uSampler;
+    void main(void) 
+	{
+		// update at x 0   update the rest  need pixel width
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
+        vec4 textureColor = texture2D(uSampler, uv - vec2(pixelWidth, 0));
+		
+		// new pos
+		vec3 mousePosition = vec3(MousePos.x * 0.1, MousePos.y * 0.1,0.0);
+		vec3 delta =  mousePosition- textureColor.rgb;
+		vec3 dir = normalize(delta);
+		
+		float progress = (uv.x - (pixelWidth * 0.8));
+		progress = clamp(progress, 0.0, 1.0);
+		progress = ceil(progress);
+		
+		float speed = mix(0.2, 1.4, uv.y);
+		vec3 newValue = mix(textureColor.rgb + dir * speed, textureColor.rgb, progress);
+		gl_FragColor = vec4(newValue, 1);
+		
+    }
+</script>
+
 <script id="shader-fs-screenQuad-Clean" type="x-shader/x-fragment">
     precision mediump float;
 	
@@ -834,6 +898,78 @@ var ext;
     }
 </script>
 
+<script id="shader-fs-screenQuad-Test" type="x-shader/x-fragment">
+    precision mediump float;
+	
+	varying vec2 vTextureCoord;
+	varying vec2 vTextureCoord1;
+	varying vec3 vTransformedNormal;
+	varying vec4 vPosition;
+
+	uniform float gTime2;
+	
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingColor;
+	  
+	uniform sampler2D uSampler;
+	uniform sampler2D uSamplerVertex;
+    void main(void) 
+	{
+		vec2 uv = vec2(vTextureCoord.s, vTextureCoord.t);
+        vec4 textureColor = texture2D(uSampler, uv);
+		gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+		gl_FragColor.r = 0.5;
+    }
+</script>
+
+<script id="shader-vs-DataTrail" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec2 aTextureCoord;
+	attribute vec3 aVertexNormal;
+	attribute vec2 aTextureCoord1;
+	
+	uniform mat4 uMVMatrix;
+	uniform mat4 uPMatrix;
+	uniform mat3 uNMatrix;
+
+	uniform float gTime;
+	uniform sampler2D uSamplerVertex;
+
+	
+	varying vec2 vTextureCoord;
+	varying vec2 vTextureCoord1;
+
+	varying vec3 vTransformedNormal;
+	varying vec4 vPosition;
+
+	
+    void main(void) 
+	{
+		vec2 uv = vec2(aTextureCoord1.s, aTextureCoord1.t);
+		vec4 textureColor = texture2D(uSamplerVertex, uv);
+		vec4 bla = vec4(textureColor.x, textureColor.y + aVertexPosition.y, -160.0, gl_Position.a);
+
+	
+	
+		vTransformedNormal = uNMatrix * aVertexNormal;
+		vPosition = uMVMatrix * vec4(bla.rgb, 1.0);
+		
+		vTextureCoord = aTextureCoord;
+		vTextureCoord1 = aTextureCoord1;
+		
+		
+		
+		
+		//gl_Position = vec4(textureColor.rgb + vec3(0, aVertexPosition.y, 0), gl_Position.a);
+		
+		
+		gl_Position = uPMatrix * vPosition;
+    }
+</script>
+
+
+
 <script id="shader-vs-screenQuad" type="x-shader/x-vertex">
 	attribute vec3 aVertexPosition;
 	attribute vec2 aTextureCoord;
@@ -854,9 +990,6 @@ var ext;
 		vTransformedNormal = uNMatrix * aVertexNormal;
 
 		vPosition = vec4(aVertexPosition, 1.0);
-		
-	
-	
 	
 		gl_Position = vPosition;
 		vTextureCoord = aTextureCoord;

@@ -57,13 +57,17 @@ function Creation(_position, _rotation, _scale, _name, _modelTag, _textureTags, 
 		this.mesh.dataTypes.requireVPos = true;
 		this.mesh.dataTypes.requireUVs = true;
 		this.mesh.dataTypes.requireNormals = false;
-
+		this.mesh.dataTypes.requireUV_1 = false;
+		
 		if(_vertexDataTypes != null)
 		{
 			for(let i =0; i < _vertexDataTypes.length; i++)
 			{
 				if(_vertexDataTypes[i] == 'vn')
 					this.mesh.dataTypes.requireNormals = true;
+				
+				if(_vertexDataTypes[i] == 'uv_1')
+					this.mesh.dataTypes.requireUV_1 = true;
 			}
 		}
 		
@@ -169,6 +173,12 @@ Creation.prototype.CalculateFullTransform = function()
 		{
 			shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
 			gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
+		}
+		
+		if(gameObject.mesh.dataTypes.requireUV_1)
+		{
+			shaderProgram.textureCoordAttribute1 = gl.getAttribLocation(shaderProgram, "aTextureCoord1");
+			gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute1);
 		}
 		
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");

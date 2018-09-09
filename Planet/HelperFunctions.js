@@ -47,7 +47,6 @@ function DrawGameObject(gameObject, seconds)
 		}
 		if(gameObject.mesh.dataTypes.requireUVs)
 		{
-			
 			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexTextureCoordBuffer);
 			gl.vertexAttribPointer(gameObject.material.shaderProgram.textureCoordAttribute, gameObject.mesh.cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		}
@@ -63,6 +62,20 @@ function DrawGameObject(gameObject, seconds)
 		{
 			gl.disableVertexAttribArray(2);
 		}
+		
+		if(gameObject.mesh.dataTypes.requireUV_1)
+		{
+			gl.enableVertexAttribArray(gameObject.material.shaderProgram.textureCoordAttribute1);
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, gameObject.mesh.cubeVertexTextureCoordBuffer1);
+			gl.vertexAttribPointer(gameObject.material.shaderProgram.textureCoordAttribute1, gameObject.mesh.cubeVertexTextureCoordBuffer1.itemSize, gl.FLOAT, false, 0, 0);
+		}
+		else
+		{
+			gl.disableVertexAttribArray(3);
+		}
+		
+		
 		
 		/*
 		What’s happening here is somewhat complex. 

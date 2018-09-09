@@ -138,8 +138,10 @@ function LoadModelDirect(_data)
 function SetModel(_model, gameObject)
 {	
 	var cubeVertexPositionBuffer = null;
-	var cubeVertexNormalBuffer = null;
 	var cubeVertexTextureCoordBuffer = null;
+	var cubeVertexNormalBuffer = null;
+
+	var cubeVertexTextureCoordBuffer_1 = null;
 		
 	if(gameObject.mesh.dataTypes.requireVPos)
 	{
@@ -153,7 +155,6 @@ function SetModel(_model, gameObject)
 	
 	if(gameObject.mesh.dataTypes.requireUVs)
 	{
-
 		cubeVertexTextureCoordBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.vertexTextureCoords), gl.STATIC_DRAW);
@@ -172,6 +173,18 @@ function SetModel(_model, gameObject)
 		gameObject.mesh.cubeVertexNormalBuffer = cubeVertexNormalBuffer;	
 		gameObject.mesh.cubeVertexNormalBuffer.itemSize = 3;
 	}
+	
+	if(gameObject.mesh.dataTypes.requireUV_1)
+	{
+		cubeVertexTextureCoordBuffer1 = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer1);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(_model.uvs1), gl.STATIC_DRAW);
+		
+		gameObject.mesh.cubeVertexTextureCoordBuffer1 = cubeVertexTextureCoordBuffer1;	
+		gameObject.mesh.cubeVertexTextureCoordBuffer1.itemSize = 2;	
+	}
+	
+	
 	
 
 	gameObject.mesh.totalVertexCount = _model.totalVertexCount;	
