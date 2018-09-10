@@ -346,9 +346,9 @@ var ext;
 	}
 
 	
-	var newRotationMatrix = mat4.create();
-	mat4.identity(newRotationMatrix);
-	mat4.translate(newRotationMatrix, [0.0, 0.0, -160.0]);//planet.transform.position);
+	var planetRotationMatrix = mat4.create();
+	mat4.identity(planetRotationMatrix);
+	//mat4.translate(newRotationMatrix, [0.0, 0.0, -160.0]);//planet.transform.position);
 	
   function handleMouseMove(event) 
   {
@@ -380,9 +380,13 @@ var ext;
 	//tempRot = CopyMat4(planet.transform.MatrixFull);
 	//var axis = mat4.multiply(tempRot, [1, 0, 0]);
 	//var pos = vec3.normalize([planet.transform.MatrixFull[12], planet.transform.MatrixFull[13], planet.transform.MatrixFull[14]]);
-	//mat4.rotate(newRotationMatrix, DegToRad(deltaX / 10), );
 	
-	mat4.rotate(planet.transform.MatrixRot, DegToRad(deltaX / 10), [posX[0], posX[1], posX[2]]);
+	
+	  var newRotationMatrix = mat4.create();
+    mat4.identity(newRotationMatrix);
+	mat4.rotate(newRotationMatrix, DegToRad(deltaX / 10), [0,1,0]);
+	
+	//mat4.rotate(planet.transform.MatrixRot, DegToRad(deltaX / 10), [posX[0], posX[1], posX[2]]);
 
 	
 	
@@ -401,10 +405,14 @@ var ext;
 	
 	
 	var deltaY = newY - lastMouseY;
-	//mat4.rotate(newRotationMatrix, DegToRad(deltaY / 10), [1, 0, 0]);
-	//mat4.rotate(newRotationMatrix, DegToRad(deltaY / 10), [posY[0], posY[1], posY[2]]);
-	mat4.rotate(planet.transform.MatrixRot, DegToRad(deltaY / 10), [posY[0], posY[1], posY[2]]);
 	
+	mat4.rotate(newRotationMatrix, DegToRad(deltaY / 10), [1, 0, 0]);
+	//mat4.rotate(newRotationMatrix, DegToRad(deltaY / 10), [posY[0], posY[1], posY[2]]);
+	//mat4.rotate(planet.transform.MatrixRot, DegToRad(deltaY / 10), [posY[0], posY[1], posY[2]]);
+	
+	
+	 mat4.multiply(newRotationMatrix, planetRotationMatrix, planetRotationMatrix);
+	planet.transform.MatrixRot = planetRotationMatrix;
 	
 	
 	//planet.transform.MatrixFull = mat4.identity(planet.transform.MatrixFull);
